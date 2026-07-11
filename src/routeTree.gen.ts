@@ -17,6 +17,7 @@ import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products.$id'
+import { Route as AuthenticatedProductsIdEditRouteImport } from './routes/_authenticated/products.$id.edit'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -58,6 +59,12 @@ const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedProductsRoute,
 } as any)
+const AuthenticatedProductsIdEditRoute =
+  AuthenticatedProductsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedProductsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,8 +72,9 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
-  '/products/$id': typeof AuthenticatedProductsIdRoute
+  '/products/$id': typeof AuthenticatedProductsIdRouteWithChildren
   '/products/new': typeof AuthenticatedProductsNewRoute
+  '/products/$id/edit': typeof AuthenticatedProductsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,8 +82,9 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
-  '/products/$id': typeof AuthenticatedProductsIdRoute
+  '/products/$id': typeof AuthenticatedProductsIdRouteWithChildren
   '/products/new': typeof AuthenticatedProductsNewRoute
+  '/products/$id/edit': typeof AuthenticatedProductsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,8 +94,9 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
-  '/_authenticated/products/$id': typeof AuthenticatedProductsIdRoute
+  '/_authenticated/products/$id': typeof AuthenticatedProductsIdRouteWithChildren
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
+  '/_authenticated/products/$id/edit': typeof AuthenticatedProductsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/products/$id'
     | '/products/new'
+    | '/products/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/products/$id'
     | '/products/new'
+    | '/products/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products'
     | '/_authenticated/products/$id'
     | '/_authenticated/products/new'
+    | '/_authenticated/products/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,16 +197,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
       parentRoute: typeof AuthenticatedProductsRoute
     }
+    '/_authenticated/products/$id/edit': {
+      id: '/_authenticated/products/$id/edit'
+      path: '/edit'
+      fullPath: '/products/$id/edit'
+      preLoaderRoute: typeof AuthenticatedProductsIdEditRouteImport
+      parentRoute: typeof AuthenticatedProductsIdRoute
+    }
   }
 }
 
+interface AuthenticatedProductsIdRouteChildren {
+  AuthenticatedProductsIdEditRoute: typeof AuthenticatedProductsIdEditRoute
+}
+
+const AuthenticatedProductsIdRouteChildren: AuthenticatedProductsIdRouteChildren =
+  {
+    AuthenticatedProductsIdEditRoute: AuthenticatedProductsIdEditRoute,
+  }
+
+const AuthenticatedProductsIdRouteWithChildren =
+  AuthenticatedProductsIdRoute._addFileChildren(
+    AuthenticatedProductsIdRouteChildren,
+  )
+
 interface AuthenticatedProductsRouteChildren {
-  AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
+  AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRouteWithChildren
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
 }
 
 const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
-  AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
+  AuthenticatedProductsIdRoute: AuthenticatedProductsIdRouteWithChildren,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
 }
 

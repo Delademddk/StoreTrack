@@ -29,8 +29,9 @@ export const Route = createFileRoute("/_authenticated/products/$id/edit")({
 function EditProductPage() {
   const { product } = Route.useLoaderData();
   const navigate = useNavigate();
-  const [form, setForm] = useState(product);
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((s) => ({ ...s, [k]: v }));
+  const [form, setForm] = useState<typeof product>(product);
+  const set = <K extends keyof typeof product>(k: K, v: (typeof product)[K]) =>
+    setForm((s: typeof product) => ({ ...s, [k]: v }));
 
   return (
     <>
