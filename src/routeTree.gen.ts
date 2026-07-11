@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
@@ -37,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   id: '/products',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
+  '/sales': typeof AuthenticatedSalesRoute
   '/products/$id': typeof AuthenticatedProductsIdRouteWithChildren
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/$id/edit': typeof AuthenticatedProductsIdEditRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
+  '/sales': typeof AuthenticatedSalesRoute
   '/products/$id': typeof AuthenticatedProductsIdRouteWithChildren
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/$id/edit': typeof AuthenticatedProductsIdEditRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
+  '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/products/$id': typeof AuthenticatedProductsIdRouteWithChildren
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products/$id/edit': typeof AuthenticatedProductsIdEditRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard'
     | '/products'
+    | '/sales'
     | '/products/$id'
     | '/products/new'
     | '/products/$id/edit'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard'
     | '/products'
+    | '/sales'
     | '/products/$id'
     | '/products/new'
     | '/products/$id/edit'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/dashboard'
     | '/_authenticated/products'
+    | '/_authenticated/sales'
     | '/_authenticated/products/$id'
     | '/_authenticated/products/new'
     | '/_authenticated/products/$id/edit'
@@ -168,6 +180,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/sales': {
+      id: '/_authenticated/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/products': {
       id: '/_authenticated/products'
@@ -239,11 +258,13 @@ const AuthenticatedProductsRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
+  AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
+  AuthenticatedSalesRoute: AuthenticatedSalesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
