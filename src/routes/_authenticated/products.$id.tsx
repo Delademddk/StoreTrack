@@ -53,9 +53,18 @@ function ProductDetailPage() {
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{p.description}</p>
                 <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-                  <Stat icon={Boxes} label="Boxes" value={`${p.boxes}`} sub={`× ${p.itemsPerBox} items`} />
-                  <Stat icon={Package} label="Extra pieces" value={`${p.extraPieces}`} sub={`Total ${totalQty(p)} units`} />
-                  <Stat icon={Tag} label="Unit price" value={moneyExact(p.individualPrice)} sub={`Box ${moneyExact(p.pricePerBox)}`} />
+                  {p.isBoxed ? (
+                    <Stat icon={Boxes} label="Boxes" value={`${p.boxes}`} sub={`× ${p.itemsPerBox} items`} />
+                  ) : (
+                    <Stat icon={Boxes} label="Boxes" value="—" sub="Sold individually" />
+                  )}
+                  <Stat icon={Package} label={p.isBoxed ? "Loose items" : "On hand"} value={`${p.extraPieces}`} sub={`Total ${totalQty(p)} units`} />
+                  <Stat
+                    icon={Tag}
+                    label="Unit price"
+                    value={moneyExact(p.individualPrice)}
+                    sub={p.isBoxed ? `Box ${moneyExact(p.pricePerBox)}` : "Individual only"}
+                  />
                   <Stat icon={Building2} label="Supplier" value={p.supplier} sub={`Threshold ${p.lowStockThreshold}`} />
                 </div>
               </div>
