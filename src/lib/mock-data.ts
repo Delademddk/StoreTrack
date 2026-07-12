@@ -7,6 +7,15 @@ export interface Product {
   category: string;
   brand: string;
   supplier: string;
+  /**
+   * When true, the product is supplied in boxes and inventory is tracked as
+   * (boxes × itemsPerBox) + extraPieces. When false, only extraPieces is used
+   * as the individual on-hand quantity and box-specific fields are ignored.
+   *
+   * Structured this way so a future "open box" workflow can decrement `boxes`
+   * and add `itemsPerBox` to `extraPieces` without changing the schema.
+   */
+  isBoxed: boolean;
   boxes: number;
   itemsPerBox: number;
   extraPieces: number;
@@ -20,8 +29,9 @@ export interface Product {
   updatedAt: string;
 }
 
-export const totalQty = (p: Pick<Product, "boxes" | "itemsPerBox" | "extraPieces">) =>
-  p.boxes * p.itemsPerBox + p.extraPieces;
+export const totalQty = (
+  p: Pick<Product, "boxes" | "itemsPerBox" | "extraPieces"> & { isBoxed?: boolean },
+) => (p.isBoxed === false ? p.extraPieces : p.boxes * p.itemsPerBox + p.extraPieces);
 
 export const statusFor = (p: Product): ProductStatus => {
   const q = totalQty(p);
