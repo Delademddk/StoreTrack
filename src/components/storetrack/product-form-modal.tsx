@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Barcode, Package, Save } from "lucide-react";
+import { Barcode, Package, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -17,26 +17,30 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  categories,
   suppliers,
   totalQty,
   type Product,
 } from "@/lib/mock-data";
+import { categoriesStore, useCategories } from "@/lib/categories-store";
+
+const CREATE_CATEGORY_VALUE = "__create_new_category__";
 
 export type ProductDraft = Omit<Product, "id" | "sku" | "createdAt" | "updatedAt" | "image"> & {
   image?: string;
 };
 
-const emptyDraft = (): ProductDraft => ({
+const emptyDraft = (defaultCategory: string): ProductDraft => ({
   name: "",
-  category: categories[0],
+  category: defaultCategory,
   brand: "",
   supplier: suppliers[0],
   isBoxed: false,
@@ -64,7 +68,11 @@ export function ProductFormModal({
   initial?: Product | null;
   onSubmit: (draft: ProductDraft) => void;
 }) {
-  const [form, setForm] = useState<ProductDraft>(emptyDraft);
+  const categories = useCategories();
+  const [form, setForm] = useState<ProductDraft>(() =>
+    emptyDraft(categories[0]?.name ?? ""),
+  );
+  const [createCategoryOpen, setCreateCategoryOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -72,14 +80,29 @@ export function ProductFormModal({
       const { id: _id, sku: _sku, createdAt: _c, updatedAt: _u, ...rest } = initial;
       setForm({ ...rest });
     } else {
-      setForm(emptyDraft());
+      setForm(emptyDraft(categories[0]?.name ?? ""));
     }
+    // Only reset when opening / switching the edited product.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
 
   const set = <K extends keyof ProductDraft>(k: K, v: ProductDraft[K]) =>
     setForm((s) => ({ ...s, [k]: v }));
 
   const qty = useMemo(() => totalQty(form), [form]);
+
+  const handleCategoryChange = (value: string) => {
+    if (value === CREATE_CATEGORY_VALUE) {
+      setCreateCategoryOpen(true);
+      return;
+    }
+    set("category", value);
+  };
+
+  const handleCategoryCreated = (name: string) => {
+    const created = categoriesStore.add(name);
+    if (created) set("category", created.name);
+  };
 
   const validate = (): string | null => {
     if (!form.name.trim()) return "Product name is required";
@@ -144,16 +167,27 @@ export function ProductFormModal({
                   </div>
                   <div className="space-y-1.5">
                     <Label>Category</Label>
-                    <Select value={form.category} onValueChange={(v) => set("category", v)}>
+                    <Select value={form.category} onValueChange={handleCategoryChange}>
                       <SelectTrigger className="h-10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
+                        <SelectGroup>
+                          <SelectItem
+                            value={CREATE_CATEGORY_VALUE}
+                            className="text-brand focus:text-brand"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Plus className="size-3.5" /> Create new category
+                            </span>
                           </SelectItem>
-                        ))}
+                          <SelectSeparator />
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={c.name}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   </div>
@@ -380,6 +414,85 @@ export function ProductFormModal({
             </Button>
           </DialogFooter>
         </form>
+        <CreateCategoryModal
+          open={createCategoryOpen}
+          onOpenChange={setCreateCategoryOpen}
+          existing={categories.map((c) => c.name)}
+          onCreate={handleCategoryCreated}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CreateCategoryModal({
+  open,
+  onOpenChange,
+  existing,
+  onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  existing: string[];
+  onCreate: (name: string) => void;
+}) {
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    if (open) setName("");
+  }, [open]);
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast.error("Category name is required");
+      return;
+    }
+    if (existing.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error("A category with this name already exists");
+      return;
+    }
+    onCreate(trimmed);
+    toast.success(`Category "${trimmed}" created`);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm sm:rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Create category</DialogTitle>
+          <DialogDescription>
+            Add a new category. You can enrich it later with a color, icon, or description.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label>Category name</Label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Beverages"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCreate(e);
+            }}
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="button" className="rounded-xl" onClick={handleCreate}>
+            Create
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
