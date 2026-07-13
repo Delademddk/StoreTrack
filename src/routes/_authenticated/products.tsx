@@ -8,6 +8,7 @@ import {
   List,
   MoreHorizontal,
   Package,
+  PackagePlus,
   Pencil,
   Plus,
   Search,
@@ -50,6 +51,10 @@ import {
   ProductFormModal,
   type ProductDraft,
 } from "@/components/storetrack/product-form-modal";
+import {
+  RestockModal,
+  type RestockDraft,
+} from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/products")({
@@ -82,6 +87,7 @@ function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Product | null>(null);
+  const [restocking, setRestocking] = useState<Product | null>(null);
 
   const filtered = useMemo(() => {
     return items.filter((p) => {
@@ -150,6 +156,30 @@ function ProductsPage() {
   const handleDelete = (p: Product) => {
     setItems((list) => list.filter((x) => x.id !== p.id));
     toast.success(`${p.name} deleted`);
+  };
+
+  const handleRestock = (product: Product, draft: RestockDraft) => {
+    setItems((list) =>
+      list.map((p) =>
+        p.id === product.id
+          ? {
+              ...p,
+              boxes: p.isBoxed ? p.boxes + draft.addBoxes : p.boxes,
+              extraPieces: p.extraPieces + draft.addPieces,
+              updatedAt: new Date().toISOString(),
+            }
+          : p,
+      ),
+    );
+    // Structured for a future audit log: draft.reason / draft.notes /
+    // draft.addBoxes / draft.addPieces are all preserved on the payload.
+    const parts = [
+      draft.addBoxes > 0 ? `${draft.addBoxes} box${draft.addBoxes === 1 ? "" : "es"}` : null,
+      draft.addPieces > 0 ? `${draft.addPieces} loose` : null,
+    ].filter(Boolean);
+    toast.success(`Restocked ${product.name}`, {
+      description: `${parts.join(" · ")} · ${draft.reason}`,
+    });
   };
 
   return (
@@ -261,6 +291,7 @@ function ProductsPage() {
                         product={p}
                         onView={() => navigate({ to: "/products/$id", params: { id: p.id } })}
                         onEdit={() => openEdit(p)}
+                        onRestock={() => setRestocking(p)}
                         onDuplicate={() => handleDuplicate(p)}
                         onDelete={() => setConfirmDelete(p)}
                       />
@@ -303,6 +334,7 @@ function ProductsPage() {
                   product={p}
                   onView={() => navigate({ to: "/products/$id", params: { id: p.id } })}
                   onEdit={() => openEdit(p)}
+                  onRestock={() => setRestocking(p)}
                   onDuplicate={() => handleDuplicate(p)}
                   onDelete={() => setConfirmDelete(p)}
                   variant="floating"
@@ -324,6 +356,15 @@ function ProductsPage() {
         mode={editing ? "edit" : "create"}
         initial={editing}
         onSubmit={handleSubmit}
+      />
+
+      <RestockModal
+        open={!!restocking}
+        onOpenChange={(o) => !o && setRestocking(null)}
+        product={restocking}
+        onSubmit={(draft) => {
+          if (restocking) handleRestock(restocking, draft);
+        }}
       />
 
       <AlertDialog
@@ -361,6 +402,7 @@ function RowActions({
   product: _product,
   onView,
   onEdit,
+  onRestock,
   onDuplicate,
   onDelete,
   variant = "inline",
@@ -368,6 +410,7 @@ function RowActions({
   product: Product;
   onView: () => void;
   onEdit: () => void;
+  onRestock: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
   variant?: "inline" | "floating";
@@ -394,6 +437,9 @@ function RowActions({
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onEdit}>
           <Pencil className="mr-2 size-4" /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onRestock}>
+          <PackagePlus className="mr-2 size-4" /> Restock
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onDuplicate}>
           <Copy className="mr-2 size-4" /> Duplicate
