@@ -1,15 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditCard, DollarSign, Minus, Package, Plus, Search, Smartphone, Trash2 } from "lucide-react";
+import { Minus, Package, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
+import { CheckoutModal, type CheckoutConfirmPayload } from "@/components/storetrack/checkout-modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { categories, products, statusFor, totalQty, type Product } from "@/lib/mock-data";
+import { getCustomer, recordCreditSale } from "@/lib/customers-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -44,8 +46,8 @@ function SalesPage() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [method, setMethod] = useState<"Cash" | "Card" | "Mobile Money">("Card");
   const [discount, setDiscount] = useState(0);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const filtered = products.filter(
     (p) => (cat === "all" || p.category === cat) && (!q || p.name.toLowerCase().includes(q.toLowerCase())),
@@ -89,7 +91,7 @@ function SalesPage() {
   const invalidLines = cart.filter((i) => i.boxQty === 0 && i.pieceQty === 0);
   const canCheckout = cart.length > 0 && invalidLines.length === 0 && total > 0;
 
-  const completeSale = () => {
+  const openCheckout = () => {
     if (cart.length === 0) {
       toast.error("Add at least one product to complete a sale");
       return;
@@ -98,8 +100,39 @@ function SalesPage() {
       toast.error("Every line item needs at least one box or one individual item");
       return;
     }
-    // NOTE: inventory decrement + audit log wiring will land with the persistence layer.
-    toast.success(`Sale complete — ${moneyExact(total)} via ${method}`);
+    setCheckoutOpen(true);
+  };
+
+  const handleConfirmCheckout = (p: CheckoutConfirmPayload) => {
+    // NOTE: inventory decrement + full audit log wiring will land with the persistence layer.
+    if (p.onCredit && p.customerId) {
+      recordCreditSale({
+        customerId: p.customerId,
+        total,
+        amountPaid: p.amountPaid ?? 0,
+        method: p.method,
+        expectedPaymentDate: p.expectedPaymentDate,
+        notes: p.notes,
+        lines: cart.map((i) => ({
+          productId: i.id,
+          name: i.name,
+          boxQty: i.boxQty,
+          pieceQty: i.pieceQty,
+          pricePerBox: i.pricePerBox,
+          individualPrice: i.individualPrice,
+        })),
+      });
+      const customer = getCustomer(p.customerId);
+      const outstanding = Math.max(0, total - (p.amountPaid ?? 0));
+      toast.success(
+        outstanding > 0
+          ? `Credit sale saved — ${customer?.name} owes ${moneyExact(outstanding)}`
+          : `Sale settled — ${customer?.name}`,
+      );
+    } else {
+      toast.success(`Sale complete — ${moneyExact(total)} via ${p.method}`);
+    }
+    setCheckoutOpen(false);
     setCart([]);
     setDiscount(0);
   };
@@ -218,31 +251,26 @@ function SalesPage() {
           </div>
 
           <div className="border-t border-border p-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Payment method</p>
-            <div className="grid grid-cols-3 gap-2">
-              {(["Cash", "Card", "Mobile Money"] as const).map((m) => {
-                const Icon = m === "Cash" ? DollarSign : m === "Card" ? CreditCard : Smartphone;
-                return (
-                  <button
-                    key={m}
-                    onClick={() => setMethod(m)}
-                    className={cn(
-                      "flex flex-col items-center gap-1 rounded-xl border py-3 text-[11px] font-medium transition-colors",
-                      method === m ? "border-brand bg-brand/10 text-brand" : "border-border text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                    {m}
-                  </button>
-                );
-              })}
-            </div>
-            <Button className="mt-4 h-11 w-full rounded-xl text-sm font-semibold" disabled={!canCheckout} onClick={completeSale}>
+            <Button
+              className="h-11 w-full rounded-xl text-sm font-semibold"
+              disabled={!canCheckout}
+              onClick={openCheckout}
+            >
               Complete sale
             </Button>
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Choose payment method &amp; credit options on the next step
+            </p>
           </div>
         </Card>
       </div>
+
+      <CheckoutModal
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        total={total}
+        onConfirm={handleConfirmCheckout}
+      />
     </>
   );
 }
