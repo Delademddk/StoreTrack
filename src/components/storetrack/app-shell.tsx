@@ -17,6 +17,7 @@ import {
   TrendingUp,
   User,
   Users,
+  UserRound,
   X,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
@@ -51,6 +52,7 @@ const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/products", label: "Products", icon: Package, match: "/products" },
   { to: "/sales", label: "Sales", icon: ShoppingCart },
+  { to: "/customers", label: "Customers", icon: UserRound, match: "/customers" },
   { to: "/reports", label: "Reports", icon: TrendingUp },
   { to: "/users", label: "Users", icon: Users },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
