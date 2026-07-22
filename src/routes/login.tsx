@@ -55,14 +55,17 @@ function LoginPage() {
         </div>
         <div className="relative space-y-6">
           <p className="max-w-md text-3xl font-semibold leading-tight tracking-tight">
-            The command center for modern retail teams — inventory, sales, and insights in one calm surface.
+            The command center for modern retail teams — inventory, sales, and insights in one calm
+            surface.
           </p>
           <div className="grid gap-4 text-sm">
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 size-4 shrink-0" />
               <div>
                 <p className="font-medium">Full audit trail on every action</p>
-                <p className="text-white/70">Traceability from restock to sale, ready for compliance.</p>
+                <p className="text-white/70">
+                  Traceability from restock to sale, ready for compliance.
+                </p>
               </div>
             </div>
           </div>
@@ -95,7 +98,10 @@ function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link to="/reset-password" className="text-xs font-medium text-brand hover:underline">
+                <Link
+                  to="/reset-password"
+                  className="text-xs font-medium text-brand hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -121,7 +127,11 @@ function LoginPage() {
               Remember me for 30 days
             </label>
 
-            <Button type="submit" className="h-11 w-full gap-2 text-sm font-semibold" disabled={loading}>
+            <Button
+              type="submit"
+              className="h-11 w-full gap-2 text-sm font-semibold"
+              disabled={loading}
+            >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
               {loading ? "Signing in…" : "Sign in"}
             </Button>

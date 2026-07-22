@@ -15,11 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import {
-  customerSummary,
-  listCustomers,
-  subscribeCustomers,
-} from "@/lib/customers-store";
+import { customerSummary, listCustomers, subscribeCustomers } from "@/lib/customers-store";
 
 export const Route = createFileRoute("/_authenticated/customers")({
   component: CustomersPage,

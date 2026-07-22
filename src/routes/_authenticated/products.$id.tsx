@@ -16,7 +16,12 @@ export const Route = createFileRoute("/_authenticated/products/$id")({
   notFoundComponent: () => (
     <div className="py-24 text-center">
       <p className="text-sm text-muted-foreground">Product not found.</p>
-      <Link to="/products" className="mt-4 inline-block text-sm font-medium text-brand hover:underline">← Back to products</Link>
+      <Link
+        to="/products"
+        className="mt-4 inline-block text-sm font-medium text-brand hover:underline"
+      >
+        ← Back to products
+      </Link>
     </div>
   ),
 });
@@ -33,9 +38,15 @@ function ProductDetailPage() {
         description={`${p.category} · ${p.brand} · ${p.sku}`}
         actions={
           <>
-            <Link to="/products"><Button variant="outline" className="gap-2 rounded-xl"><ArrowLeft className="size-4" /> Back</Button></Link>
+            <Link to="/products">
+              <Button variant="outline" className="gap-2 rounded-xl">
+                <ArrowLeft className="size-4" /> Back
+              </Button>
+            </Link>
             <Link to="/products/$id/edit" params={{ id: p.id }}>
-              <Button className="gap-2 rounded-xl"><Pencil className="size-4" /> Edit</Button>
+              <Button className="gap-2 rounded-xl">
+                <Pencil className="size-4" /> Edit
+              </Button>
             </Link>
           </>
         }
@@ -45,27 +56,48 @@ function ProductDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           <Card className="overflow-hidden rounded-2xl border-border p-0 shadow-[var(--shadow-card)]">
             <div className="grid gap-6 p-6 md:grid-cols-[240px_1fr]">
-              <img src={p.image} alt={p.name} className="aspect-square w-full rounded-xl object-cover ring-1 ring-border" />
+              <img
+                src={p.image}
+                alt={p.name}
+                className="aspect-square w-full rounded-xl object-cover ring-1 ring-border"
+              />
               <div>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={statusFor(p)} />
-                  <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{p.sku}</span>
+                  <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                    {p.sku}
+                  </span>
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{p.description}</p>
                 <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
                   {p.isBoxed ? (
-                    <Stat icon={Boxes} label="Boxes" value={`${p.boxes}`} sub={`× ${p.itemsPerBox} items`} />
+                    <Stat
+                      icon={Boxes}
+                      label="Boxes"
+                      value={`${p.boxes}`}
+                      sub={`× ${p.itemsPerBox} items`}
+                    />
                   ) : (
                     <Stat icon={Boxes} label="Boxes" value="—" sub="Sold individually" />
                   )}
-                  <Stat icon={Package} label={p.isBoxed ? "Loose items" : "On hand"} value={`${p.extraPieces}`} sub={`Total ${totalQty(p)} units`} />
+                  <Stat
+                    icon={Package}
+                    label={p.isBoxed ? "Loose items" : "On hand"}
+                    value={`${p.extraPieces}`}
+                    sub={`Total ${totalQty(p)} units`}
+                  />
                   <Stat
                     icon={Tag}
                     label="Unit price"
                     value={moneyExact(p.individualPrice)}
                     sub={p.isBoxed ? `Box ${moneyExact(p.pricePerBox)}` : "Individual only"}
                   />
-                  <Stat icon={Building2} label="Supplier" value={p.supplier} sub={`Threshold ${p.lowStockThreshold}`} />
+                  <Stat
+                    icon={Building2}
+                    label="Supplier"
+                    value={p.supplier}
+                    sub={`Threshold ${p.lowStockThreshold}`}
+                  />
                 </div>
               </div>
             </div>
@@ -75,12 +107,16 @@ function ProductDetailPage() {
             <div className="flex items-center justify-between border-b border-border p-5">
               <div>
                 <h2 className="text-sm font-semibold">Sales history</h2>
-                <p className="text-xs text-muted-foreground">Every transaction involving this SKU</p>
+                <p className="text-xs text-muted-foreground">
+                  Every transaction involving this SKU
+                </p>
               </div>
               <TrendingUp className="size-4 text-brand" />
             </div>
             {productSales.length === 0 ? (
-              <p className="p-8 text-center text-sm text-muted-foreground">No sales recorded yet.</p>
+              <p className="p-8 text-center text-sm text-muted-foreground">
+                No sales recorded yet.
+              </p>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -100,8 +136,12 @@ function ProductDetailPage() {
                         <td className="px-5 py-3 font-mono text-brand">{s.invoice}</td>
                         <td className="px-5 py-3">{s.customer}</td>
                         <td className="px-5 py-3 text-right font-mono">{item.qty}</td>
-                        <td className="px-5 py-3 text-right font-mono">{moneyExact(item.qty * item.unitPrice)}</td>
-                        <td className="px-5 py-3 text-right text-muted-foreground">{new Date(s.at).toLocaleDateString()}</td>
+                        <td className="px-5 py-3 text-right font-mono">
+                          {moneyExact(item.qty * item.unitPrice)}
+                        </td>
+                        <td className="px-5 py-3 text-right text-muted-foreground">
+                          {new Date(s.at).toLocaleDateString()}
+                        </td>
                       </tr>
                     );
                   })}
@@ -123,7 +163,9 @@ function ProductDetailPage() {
                 <span className="absolute -left-1.5 grid size-3 place-items-center rounded-full bg-brand ring-4 ring-background" />
                 <p className="text-sm font-semibold">{a.action}</p>
                 <p className="text-xs text-muted-foreground">{a.description}</p>
-                <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{a.at} · {a.user}</p>
+                <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                  {a.at} · {a.user}
+                </p>
               </li>
             ))}
           </ol>
@@ -133,7 +175,17 @@ function ProductDetailPage() {
   );
 }
 
-function Stat({ icon: Icon, label, value, sub }: { icon: typeof Boxes; label: string; value: string; sub?: string }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: typeof Boxes;
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-xl border border-border bg-muted/30 p-3">
       <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -63,7 +63,12 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-3" : "px-6")}>
+      <div
+        className={cn(
+          "flex h-16 items-center border-b border-sidebar-border",
+          collapsed ? "justify-center px-3" : "px-6",
+        )}
+      >
         <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5">
           <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <div className="size-3.5 rounded-sm border-2 border-current" />
@@ -100,9 +105,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             >
               <Icon className={cn("size-4 shrink-0", active && "text-brand")} />
               {!collapsed && <span className="truncate">{item.label}</span>}
-              {!collapsed && active && (
-                <span className="ml-auto size-1.5 rounded-full bg-brand" />
-              )}
+              {!collapsed && active && <span className="ml-auto size-1.5 rounded-full bg-brand" />}
             </Link>
           );
         })}
@@ -171,7 +174,12 @@ function NotificationsPopover() {
   const unread = 3;
   return (
     <div className="relative">
-      <Button variant="ghost" size="icon" className="relative rounded-full" onClick={() => setOpen((v) => !v)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative rounded-full"
+        onClick={() => setOpen((v) => !v)}
+      >
         <Bell className="size-4" />
         {unread > 0 && (
           <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
@@ -202,15 +210,17 @@ function NotificationsPopover() {
               <div className="divide-y divide-border">
                 {activity.slice(0, 6).map((a) => (
                   <div key={a.id} className="flex gap-3 px-4 py-3 hover:bg-muted/50">
-                    <div className={cn(
-                      "mt-1 size-2 shrink-0 rounded-full",
-                      a.kind === "sale" && "bg-success",
-                      a.kind === "low_stock" && "bg-warning",
-                      a.kind === "restock" && "bg-brand",
-                      a.kind === "user" && "bg-primary",
-                      a.kind === "edit" && "bg-muted-foreground",
-                      a.kind === "settings" && "bg-muted-foreground",
-                    )} />
+                    <div
+                      className={cn(
+                        "mt-1 size-2 shrink-0 rounded-full",
+                        a.kind === "sale" && "bg-success",
+                        a.kind === "low_stock" && "bg-warning",
+                        a.kind === "restock" && "bg-brand",
+                        a.kind === "user" && "bg-primary",
+                        a.kind === "edit" && "bg-muted-foreground",
+                        a.kind === "settings" && "bg-muted-foreground",
+                      )}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[13px] font-medium">{a.title}</p>
                       <p className="truncate text-[11px] text-muted-foreground">{a.description}</p>
@@ -221,7 +231,11 @@ function NotificationsPopover() {
               </div>
             </ScrollArea>
             <div className="border-t border-border bg-muted/40 px-4 py-2 text-center">
-              <Link to="/reports" className="text-[11px] font-semibold text-brand hover:underline" onClick={() => setOpen(false)}>
+              <Link
+                to="/reports"
+                className="text-[11px] font-semibold text-brand hover:underline"
+                onClick={() => setOpen(false)}
+              >
                 View activity feed
               </Link>
             </div>
@@ -238,7 +252,9 @@ function Breadcrumbs() {
   if (!parts.length) return null;
   return (
     <nav className="hidden items-center gap-1.5 text-sm text-muted-foreground md:flex">
-      <Link to="/dashboard" className="hover:text-foreground">StoreTrack</Link>
+      <Link to="/dashboard" className="hover:text-foreground">
+        StoreTrack
+      </Link>
       {parts.map((p, i) => (
         <span key={i} className="flex items-center gap-1.5">
           <span className="text-border">/</span>
@@ -257,13 +273,25 @@ function QuickActionFab() {
     <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
       {open && (
         <div className="flex flex-col items-end gap-2 duration-200 animate-in fade-in slide-in-from-bottom-2">
-          <Link to="/sales" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-[var(--shadow-elevated)] ring-1 ring-border hover:bg-accent">
+          <Link
+            to="/sales"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-[var(--shadow-elevated)] ring-1 ring-border hover:bg-accent"
+          >
             <Receipt className="size-4 text-brand" /> New sale
           </Link>
-          <Link to="/products/new" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-[var(--shadow-elevated)] ring-1 ring-border hover:bg-accent">
+          <Link
+            to="/products/new"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-[var(--shadow-elevated)] ring-1 ring-border hover:bg-accent"
+          >
             <Package className="size-4 text-brand" /> Add product
           </Link>
-          <Link to="/products" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-[var(--shadow-elevated)] ring-1 ring-border hover:bg-accent">
+          <Link
+            to="/products"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-[var(--shadow-elevated)] ring-1 ring-border hover:bg-accent"
+          >
             <TrendingUp className="size-4 text-brand" /> Restock
           </Link>
         </div>
@@ -306,7 +334,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Sheet>
 
       {/* Main region */}
-      <div className={cn("flex min-h-screen flex-col transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[72px]" : "lg:pl-64")}> 
+      <div
+        className={cn(
+          "flex min-h-screen flex-col transition-[padding] duration-200 ease-out",
+          collapsed ? "lg:pl-[72px]" : "lg:pl-64",
+        )}
+      >
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-8">
           {/* Mobile trigger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -324,7 +357,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="hidden lg:inline-flex"
             onClick={() => setCollapsed((v) => !v)}
           >
-            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
           </Button>
 
           <Breadcrumbs />
@@ -336,7 +373,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="h-9 w-64 rounded-full border-transparent bg-muted pl-9 pr-14 text-sm focus-visible:ring-2 focus-visible:ring-ring/30"
                 placeholder="Search products, sales, users…"
               />
-              <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
+              <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                ⌘K
+              </kbd>
             </div>
             <ThemeToggleButton />
             <NotificationsPopover />
@@ -346,7 +385,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <span className="grid size-7 place-items-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                     {user?.avatarInitials ?? "?"}
                   </span>
-                  <span className="hidden text-xs font-medium text-foreground md:block">{user?.name}</span>
+                  <span className="hidden text-xs font-medium text-foreground md:block">
+                    {user?.name}
+                  </span>
                   <ChevronDown className="hidden size-3.5 text-muted-foreground md:block" />
                 </button>
               </DropdownMenuTrigger>
@@ -354,21 +395,29 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">{user?.name}</span>
-                    <span className="text-[11px] font-normal text-muted-foreground">{user?.email}</span>
+                    <span className="text-[11px] font-normal text-muted-foreground">
+                      {user?.email}
+                    </span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile"><User className="mr-2 size-3.5" /> Profile</Link>
+                  <Link to="/profile">
+                    <User className="mr-2 size-3.5" /> Profile
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/settings"><SettingsIcon className="mr-2 size-3.5" /> Settings</Link>
+                  <Link to="/settings">
+                    <SettingsIcon className="mr-2 size-3.5" /> Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  logout();
-                  toast.success("Signed out");
-                }}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    logout();
+                    toast.success("Signed out");
+                  }}
+                >
                   <LogOut className="mr-2 size-3.5" /> Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>

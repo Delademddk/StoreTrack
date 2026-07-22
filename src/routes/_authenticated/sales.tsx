@@ -8,7 +8,13 @@ import { CheckoutModal, type CheckoutConfirmPayload } from "@/components/storetr
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { categories, products, statusFor, totalQty, type Product } from "@/lib/mock-data";
 import { getCustomer, recordCreditSale } from "@/lib/customers-store";
@@ -50,7 +56,9 @@ function SalesPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const filtered = products.filter(
-    (p) => (cat === "all" || p.category === cat) && (!q || p.name.toLowerCase().includes(q.toLowerCase())),
+    (p) =>
+      (cat === "all" || p.category === cat) &&
+      (!q || p.name.toLowerCase().includes(q.toLowerCase())),
   );
 
   const addToCart = (p: Product) => {
@@ -78,10 +86,22 @@ function SalesPage() {
   };
 
   const setBoxQty = (id: string, next: number) =>
-    setCart((c) => c.map((i) => (i.id === id ? { ...i, boxQty: Math.max(0, Math.min(i.availableBoxes, Math.floor(next || 0))) } : i)));
+    setCart((c) =>
+      c.map((i) =>
+        i.id === id
+          ? { ...i, boxQty: Math.max(0, Math.min(i.availableBoxes, Math.floor(next || 0))) }
+          : i,
+      ),
+    );
 
   const setPieceQty = (id: string, next: number) =>
-    setCart((c) => c.map((i) => (i.id === id ? { ...i, pieceQty: Math.max(0, Math.min(i.availablePieces, Math.floor(next || 0))) } : i)));
+    setCart((c) =>
+      c.map((i) =>
+        i.id === id
+          ? { ...i, pieceQty: Math.max(0, Math.min(i.availablePieces, Math.floor(next || 0))) }
+          : i,
+      ),
+    );
 
   const remove = (id: string) => setCart((c) => c.filter((i) => i.id !== id));
 
@@ -139,7 +159,10 @@ function SalesPage() {
 
   return (
     <>
-      <PageHeader title="Sales terminal" description="Add products, take payment, and print a receipt." />
+      <PageHeader
+        title="Sales terminal"
+        description="Add products, take payment, and print a receipt."
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
         {/* Product picker */}
@@ -182,16 +205,24 @@ function SalesPage() {
                   disabled={oos}
                 >
                   <div className="aspect-square overflow-hidden bg-muted">
-                    <img src={p.image} alt="" className="size-full object-cover transition-transform group-hover:scale-105" />
+                    <img
+                      src={p.image}
+                      alt=""
+                      className="size-full object-cover transition-transform group-hover:scale-105"
+                    />
                   </div>
                   <div className="p-3">
                     <p className="truncate text-[13px] font-semibold">{p.name}</p>
                     <div className="mt-1 flex items-center justify-between">
-                      <span className="font-mono text-sm font-semibold">{moneyExact(p.individualPrice)}</span>
+                      <span className="font-mono text-sm font-semibold">
+                        {moneyExact(p.individualPrice)}
+                      </span>
                       <StatusBadge status={statusFor(p)} />
                     </div>
                     <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {p.isBoxed ? `${p.boxes} boxes · ${p.extraPieces} loose` : `${totalQty(p)} in stock`}
+                      {p.isBoxed
+                        ? `${p.boxes} boxes · ${p.extraPieces} loose`
+                        : `${totalQty(p)} in stock`}
                     </p>
                   </div>
                 </button>
@@ -300,7 +331,9 @@ function CartRow({
             {moneyExact(item.individualPrice)}/item
           </p>
         </div>
-        <span className="whitespace-nowrap font-mono text-sm font-semibold">{moneyExact(lineTotal(item))}</span>
+        <span className="whitespace-nowrap font-mono text-sm font-semibold">
+          {moneyExact(lineTotal(item))}
+        </span>
         <button
           className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           onClick={onRemove}

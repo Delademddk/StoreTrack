@@ -40,9 +40,7 @@ export const categoriesStore = {
   add(name: string): Category | null {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    const existing = categories.find(
-      (c) => c.name.toLowerCase() === trimmed.toLowerCase(),
-    );
+    const existing = categories.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
     if (existing) return existing;
     const created: Category = {
       id: `c_${Date.now()}`,

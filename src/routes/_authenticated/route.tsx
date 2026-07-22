@@ -7,7 +7,8 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: ({ location }) => {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("storetrack-session") ?? sessionStorage.getItem("storetrack-session");
+    const raw =
+      localStorage.getItem("storetrack-session") ?? sessionStorage.getItem("storetrack-session");
     if (!raw) {
       throw redirect({
         to: "/login",

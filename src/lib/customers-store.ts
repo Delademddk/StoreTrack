@@ -68,8 +68,7 @@ const uid = (p: string) =>
 // -------- Seed data (a few illustrative credit customers) --------------
 
 const now = new Date();
-const daysAgo = (n: number) =>
-  new Date(now.getTime() - n * 24 * 60 * 60 * 1000).toISOString();
+const daysAgo = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000).toISOString();
 
 let customers: Customer[] = [
   {
@@ -188,9 +187,7 @@ export function getCustomer(id: string): Customer | undefined {
 }
 
 export function listLedger(customerId: string): LedgerEntry[] {
-  return ledger
-    .filter((e) => e.customerId === customerId)
-    .sort((a, b) => a.at.localeCompare(b.at));
+  return ledger.filter((e) => e.customerId === customerId).sort((a, b) => a.at.localeCompare(b.at));
 }
 
 export interface CustomerSummary {
@@ -229,8 +226,7 @@ export function customerSummary(customerId: string): CustomerSummary {
   const outstanding = Math.max(0, totalPurchases - totalPaid);
   let status: CustomerSummary["status"] = "clear";
   if (outstanding > 0) {
-    status =
-      nextDueAt && nextDueAt < new Date().toISOString() ? "overdue" : "outstanding";
+    status = nextDueAt && nextDueAt < new Date().toISOString() ? "overdue" : "outstanding";
   }
 
   return {

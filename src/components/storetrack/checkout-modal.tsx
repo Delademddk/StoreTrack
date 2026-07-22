@@ -308,11 +308,7 @@ export function CheckoutModal({
                     </div>
                   </div>
                   {notes.length > 60 && (
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={2}
-                    />
+                    <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
                   )}
                 </>
               )}

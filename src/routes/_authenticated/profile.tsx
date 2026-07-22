@@ -27,7 +27,11 @@ function ProfilePage() {
           <Button
             variant="outline"
             className="gap-2 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => { logout(); toast.success("Signed out"); navigate({ to: "/login" }); }}
+            onClick={() => {
+              logout();
+              toast.success("Signed out");
+              navigate({ to: "/login" });
+            }}
           >
             <LogOut className="size-4" /> Sign out
           </Button>
@@ -47,15 +51,29 @@ function ProfilePage() {
             </div>
             <div>
               <p className="text-lg font-semibold">{user?.name}</p>
-              <p className="text-sm text-muted-foreground">{user?.role} · {user?.storeName}</p>
+              <p className="text-sm text-muted-foreground">
+                {user?.role} · {user?.storeName}
+              </p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="space-y-1.5"><Label>Full name</Label><Input defaultValue={user?.name} className="h-10" /></div>
-            <div className="space-y-1.5"><Label>Username</Label><Input defaultValue={user?.username} className="h-10" /></div>
-            <div className="space-y-1.5"><Label>Email</Label><Input defaultValue={user?.email} className="h-10" /></div>
-            <div className="space-y-1.5"><Label>Phone</Label><Input defaultValue="+254 700 000 000" className="h-10" /></div>
+            <div className="space-y-1.5">
+              <Label>Full name</Label>
+              <Input defaultValue={user?.name} className="h-10" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Username</Label>
+              <Input defaultValue={user?.username} className="h-10" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input defaultValue={user?.email} className="h-10" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input defaultValue="+254 700 000 000" className="h-10" />
+            </div>
           </div>
           <div className="mt-6 flex justify-end">
             <Button onClick={() => toast.success("Profile updated")}>Save changes</Button>

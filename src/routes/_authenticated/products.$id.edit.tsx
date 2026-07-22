@@ -9,7 +9,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { categories, products, suppliers } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/products/$id/edit")({
@@ -40,7 +46,9 @@ function EditProductPage() {
         description={product.sku}
         actions={
           <Link to="/products/$id" params={{ id: product.id }}>
-            <Button variant="outline" className="gap-2 rounded-xl"><ArrowLeft className="size-4" /> Back</Button>
+            <Button variant="outline" className="gap-2 rounded-xl">
+              <ArrowLeft className="size-4" /> Back
+            </Button>
           </Link>
         }
       />
@@ -56,41 +64,84 @@ function EditProductPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5 md:col-span-2">
               <Label>Product name</Label>
-              <Input value={form.name} onChange={(e) => set("name", e.target.value)} className="h-10" />
+              <Input
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
+                className="h-10"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Category</Label>
               <Select value={form.category} onValueChange={(v) => set("category", v)}>
-                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Brand</Label>
-              <Input value={form.brand} onChange={(e) => set("brand", e.target.value)} className="h-10" />
+              <Input
+                value={form.brand}
+                onChange={(e) => set("brand", e.target.value)}
+                className="h-10"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Supplier</Label>
               <Select value={form.supplier} onValueChange={(v) => set("supplier", v)}>
-                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                <SelectContent>{suppliers.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Threshold</Label>
-              <Input type="number" value={form.lowStockThreshold} onChange={(e) => set("lowStockThreshold", Number(e.target.value))} className="h-10" />
+              <Input
+                type="number"
+                value={form.lowStockThreshold}
+                onChange={(e) => set("lowStockThreshold", Number(e.target.value))}
+                className="h-10"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Price per box</Label>
-              <Input type="number" value={form.pricePerBox} onChange={(e) => set("pricePerBox", Number(e.target.value))} className="h-10" />
+              <Input
+                type="number"
+                value={form.pricePerBox}
+                onChange={(e) => set("pricePerBox", Number(e.target.value))}
+                className="h-10"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Individual price</Label>
-              <Input type="number" value={form.individualPrice} onChange={(e) => set("individualPrice", Number(e.target.value))} className="h-10" />
+              <Input
+                type="number"
+                value={form.individualPrice}
+                onChange={(e) => set("individualPrice", Number(e.target.value))}
+                className="h-10"
+              />
             </div>
             <div className="space-y-1.5 md:col-span-2">
               <Label>Description</Label>
-              <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={3} />
+              <Textarea
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                rows={3}
+              />
             </div>
           </div>
         </Card>
@@ -107,7 +158,9 @@ function EditProductPage() {
           >
             <Trash2 className="size-4" /> Delete product
           </Button>
-          <Button type="submit" className="gap-2 rounded-xl"><Save className="size-4" /> Save changes</Button>
+          <Button type="submit" className="gap-2 rounded-xl">
+            <Save className="size-4" /> Save changes
+          </Button>
         </div>
       </form>
     </>

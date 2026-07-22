@@ -48,9 +48,14 @@ function ResetPasswordPage() {
                   placeholder="you@company.com"
                 />
               </div>
-              <Button type="submit" className="h-11 w-full">Send reset link</Button>
+              <Button type="submit" className="h-11 w-full">
+                Send reset link
+              </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Remembered it? <Link to="/login" className="font-medium text-brand hover:underline">Back to sign in</Link>
+                Remembered it?{" "}
+                <Link to="/login" className="font-medium text-brand hover:underline">
+                  Back to sign in
+                </Link>
               </p>
             </form>
           </>
@@ -61,7 +66,8 @@ function ResetPasswordPage() {
             </div>
             <h1 className="text-lg font-semibold">Check your inbox</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              We sent a reset link to <span className="font-medium text-foreground">{email}</span>. It expires in 30 minutes.
+              We sent a reset link to <span className="font-medium text-foreground">{email}</span>.
+              It expires in 30 minutes.
             </p>
             <Link to="/login">
               <Button className="mt-6 w-full">Back to sign in</Button>

@@ -9,7 +9,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { categories, suppliers, statusFor, totalQty, type Product } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/products/new")({
@@ -58,7 +64,9 @@ function NewProductPage() {
         description="Add a new SKU to inventory with detailed stock and pricing information."
         actions={
           <Link to="/products">
-            <Button variant="outline" className="gap-2 rounded-xl"><ArrowLeft className="size-4" /> Back</Button>
+            <Button variant="outline" className="gap-2 rounded-xl">
+              <ArrowLeft className="size-4" /> Back
+            </Button>
           </Link>
         }
       />
@@ -70,29 +78,58 @@ function NewProductPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Product name</Label>
-                <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Studio Pro Headphones" className="h-10" />
+                <Input
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                  placeholder="e.g. Studio Pro Headphones"
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Category</Label>
                 <Select value={form.category} onValueChange={(v) => set("category", v)}>
-                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                  <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Brand</Label>
-                <Input value={form.brand} onChange={(e) => set("brand", e.target.value)} className="h-10" />
+                <Input
+                  value={form.brand}
+                  onChange={(e) => set("brand", e.target.value)}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Supplier</Label>
                 <Select value={form.supplier} onValueChange={(v) => set("supplier", v)}>
-                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                  <SelectContent>{suppliers.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={3} />
+                <Textarea
+                  value={form.description}
+                  onChange={(e) => set("description", e.target.value)}
+                  rows={3}
+                />
               </div>
             </div>
           </Card>
@@ -102,20 +139,37 @@ function NewProductPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <Label>Boxes available</Label>
-                <Input type="number" value={form.boxes} onChange={(e) => set("boxes", Number(e.target.value))} className="h-10" />
+                <Input
+                  type="number"
+                  value={form.boxes}
+                  onChange={(e) => set("boxes", Number(e.target.value))}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Items per box</Label>
-                <Input type="number" value={form.itemsPerBox} onChange={(e) => set("itemsPerBox", Number(e.target.value))} className="h-10" />
+                <Input
+                  type="number"
+                  value={form.itemsPerBox}
+                  onChange={(e) => set("itemsPerBox", Number(e.target.value))}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Extra pieces</Label>
-                <Input type="number" value={form.extraPieces} onChange={(e) => set("extraPieces", Number(e.target.value))} className="h-10" />
+                <Input
+                  type="number"
+                  value={form.extraPieces}
+                  onChange={(e) => set("extraPieces", Number(e.target.value))}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5 sm:col-span-3">
                 <div className="flex items-center justify-between rounded-xl border border-dashed border-border bg-muted/40 p-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Auto-calculated total</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Auto-calculated total
+                    </p>
                     <p className="mt-1 font-mono text-xl font-semibold">{qty} units</p>
                   </div>
                   <p className="text-[11px] text-muted-foreground">boxes × items + extras</p>
@@ -123,15 +177,30 @@ function NewProductPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Low stock threshold</Label>
-                <Input type="number" value={form.lowStockThreshold} onChange={(e) => set("lowStockThreshold", Number(e.target.value))} className="h-10" />
+                <Input
+                  type="number"
+                  value={form.lowStockThreshold}
+                  onChange={(e) => set("lowStockThreshold", Number(e.target.value))}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Price per box</Label>
-                <Input type="number" value={form.pricePerBox} onChange={(e) => set("pricePerBox", Number(e.target.value))} className="h-10" />
+                <Input
+                  type="number"
+                  value={form.pricePerBox}
+                  onChange={(e) => set("pricePerBox", Number(e.target.value))}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Individual price</Label>
-                <Input type="number" value={form.individualPrice} onChange={(e) => set("individualPrice", Number(e.target.value))} className="h-10" />
+                <Input
+                  type="number"
+                  value={form.individualPrice}
+                  onChange={(e) => set("individualPrice", Number(e.target.value))}
+                  className="h-10"
+                />
               </div>
             </div>
           </Card>
@@ -141,10 +210,20 @@ function NewProductPage() {
             <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
               <div className="space-y-1.5">
                 <Label>Barcode (optional)</Label>
-                <Input value={form.barcode} onChange={(e) => set("barcode", e.target.value)} className="h-10 font-mono" placeholder="8901234567890" />
+                <Input
+                  value={form.barcode}
+                  onChange={(e) => set("barcode", e.target.value)}
+                  className="h-10 font-mono"
+                  placeholder="8901234567890"
+                />
               </div>
               <div className="flex items-end">
-                <Button type="button" variant="outline" className="h-10 gap-2 rounded-xl" onClick={() => set("barcode", String(Math.floor(1e12 + Math.random() * 9e12)))}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 gap-2 rounded-xl"
+                  onClick={() => set("barcode", String(Math.floor(1e12 + Math.random() * 9e12)))}
+                >
                   <Barcode className="size-4" /> Generate
                 </Button>
               </div>
@@ -152,15 +231,23 @@ function NewProductPage() {
           </Card>
 
           <div className="flex items-center justify-end gap-2">
-            <Link to="/products"><Button type="button" variant="outline" className="rounded-xl">Cancel</Button></Link>
-            <Button type="submit" className="gap-2 rounded-xl"><Save className="size-4" /> Save product</Button>
+            <Link to="/products">
+              <Button type="button" variant="outline" className="rounded-xl">
+                Cancel
+              </Button>
+            </Link>
+            <Button type="submit" className="gap-2 rounded-xl">
+              <Save className="size-4" /> Save product
+            </Button>
           </div>
         </div>
 
         {/* Live preview */}
         <div>
           <div className="sticky top-24">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Live preview</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Live preview
+            </p>
             <Card className="overflow-hidden rounded-2xl border-border shadow-[var(--shadow-card)]">
               <div className="aspect-[4/3] bg-muted">
                 {form.image ? (
@@ -178,29 +265,45 @@ function NewProductPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{form.name || "Untitled product"}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">{form.category} · {form.brand || "—"}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {form.category} · {form.brand || "—"}
+                    </p>
                   </div>
                   <StatusBadge status={previewStatus} />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Unit price</p>
-                    <p className="font-mono text-base font-semibold">{moneyExact(form.individualPrice)}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Unit price
+                    </p>
+                    <p className="font-mono text-base font-semibold">
+                      {moneyExact(form.individualPrice)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Box price</p>
-                    <p className="font-mono text-base font-semibold">{moneyExact(form.pricePerBox)}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Box price
+                    </p>
+                    <p className="font-mono text-base font-semibold">
+                      {moneyExact(form.pricePerBox)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">On hand</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      On hand
+                    </p>
                     <p className="font-mono">{qty}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Threshold</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Threshold
+                    </p>
                     <p className="font-mono">{form.lowStockThreshold}</p>
                   </div>
                 </div>
-                {form.description && <p className="mt-3 text-[11px] text-muted-foreground">{form.description}</p>}
+                {form.description && (
+                  <p className="mt-3 text-[11px] text-muted-foreground">{form.description}</p>
+                )}
               </div>
             </Card>
           </div>

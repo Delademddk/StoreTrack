@@ -21,14 +21,23 @@ function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Store profile, inventory defaults, security, and backups." />
+      <PageHeader
+        title="Settings"
+        description="Store profile, inventory defaults, security, and backups."
+      />
 
       <Tabs defaultValue="store">
         <TabsList>
-          <TabsTrigger value="store"><Store className="mr-2 size-3.5" /> Store</TabsTrigger>
+          <TabsTrigger value="store">
+            <Store className="mr-2 size-3.5" /> Store
+          </TabsTrigger>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="appearance"><Palette className="mr-2 size-3.5" /> Appearance</TabsTrigger>
-          <TabsTrigger value="security"><Shield className="mr-2 size-3.5" /> Security</TabsTrigger>
+          <TabsTrigger value="appearance">
+            <Palette className="mr-2 size-3.5" /> Appearance
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Shield className="mr-2 size-3.5" /> Security
+          </TabsTrigger>
           <TabsTrigger value="backup">Backup</TabsTrigger>
         </TabsList>
 
@@ -39,7 +48,11 @@ function SettingsPage() {
               <Field label="Email" type="email" defaultValue="ops@storetrack.io" />
               <Field label="Phone" defaultValue="+254 700 000 000" />
               <Field label="Currency" defaultValue="USD" />
-              <Field label="Address" className="md:col-span-2" defaultValue="42 Riverside Drive, Nairobi 00100" />
+              <Field
+                label="Address"
+                className="md:col-span-2"
+                defaultValue="42 Riverside Drive, Nairobi 00100"
+              />
             </div>
             <div className="mt-6 flex justify-end">
               <Button onClick={() => toast.success("Store settings saved")}>Save changes</Button>
@@ -52,9 +65,21 @@ function SettingsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Default low stock threshold" type="number" defaultValue="10" />
               <Field label="Tax rate (%)" type="number" defaultValue="8.5" />
-              <Field label="Receipt footer" className="md:col-span-2" defaultValue="Thank you for shopping with us!" />
-              <SwitchRow label="Enable barcode scanning" description="Use device camera to scan on the sales terminal." defaultChecked />
-              <SwitchRow label="Low-stock email alerts" description="Notify managers when items dip below threshold." defaultChecked />
+              <Field
+                label="Receipt footer"
+                className="md:col-span-2"
+                defaultValue="Thank you for shopping with us!"
+              />
+              <SwitchRow
+                label="Enable barcode scanning"
+                description="Use device camera to scan on the sales terminal."
+                defaultChecked
+              />
+              <SwitchRow
+                label="Low-stock email alerts"
+                description="Notify managers when items dip below threshold."
+                defaultChecked
+              />
             </div>
           </Card>
         </TabsContent>
@@ -69,7 +94,9 @@ function SettingsPage() {
                   onClick={() => setTheme(t)}
                   className={cn(
                     "rounded-xl border p-4 text-left transition-colors",
-                    theme === t ? "border-brand bg-brand/5 ring-2 ring-brand/20" : "border-border hover:bg-muted/50",
+                    theme === t
+                      ? "border-brand bg-brand/5 ring-2 ring-brand/20"
+                      : "border-border hover:bg-muted/50",
                   )}
                 >
                   <p className="text-sm font-semibold capitalize">{t}</p>
@@ -85,8 +112,15 @@ function SettingsPage() {
         <TabsContent value="security" className="mt-6">
           <Card className="rounded-2xl border-border p-6 shadow-[var(--shadow-card)]">
             <div className="space-y-4">
-              <SwitchRow label="Two-factor authentication" description="Require an OTP for every sign-in on new devices." />
-              <SwitchRow label="Session timeout" description="Auto sign-out after 30 minutes of inactivity." defaultChecked />
+              <SwitchRow
+                label="Two-factor authentication"
+                description="Require an OTP for every sign-in on new devices."
+              />
+              <SwitchRow
+                label="Session timeout"
+                description="Auto sign-out after 30 minutes of inactivity."
+                defaultChecked
+              />
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Current password" type="password" />
                 <Field label="New password" type="password" />
@@ -101,8 +135,12 @@ function SettingsPage() {
         <TabsContent value="backup" className="mt-6">
           <Card className="rounded-2xl border-border p-6 shadow-[var(--shadow-card)]">
             <div className="flex flex-wrap items-center gap-3">
-              <Button className="gap-2 rounded-xl"><CloudDownload className="size-4" /> Export backup</Button>
-              <Button variant="outline" className="gap-2 rounded-xl"><CloudUpload className="size-4" /> Import backup</Button>
+              <Button className="gap-2 rounded-xl">
+                <CloudDownload className="size-4" /> Export backup
+              </Button>
+              <Button variant="outline" className="gap-2 rounded-xl">
+                <CloudUpload className="size-4" /> Import backup
+              </Button>
             </div>
             <div className="mt-6 overflow-hidden rounded-xl border border-border">
               <table className="w-full text-sm">
@@ -124,7 +162,11 @@ function SettingsPage() {
                       <td className="px-4 py-2 font-mono text-xs">{b.f}</td>
                       <td className="px-4 py-2 text-muted-foreground">{b.d}</td>
                       <td className="px-4 py-2 text-right font-mono">{b.s}</td>
-                      <td className="px-4 py-2 text-right"><Button variant="ghost" size="sm">Restore</Button></td>
+                      <td className="px-4 py-2 text-right">
+                        <Button variant="ghost" size="sm">
+                          Restore
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -137,7 +179,17 @@ function SettingsPage() {
   );
 }
 
-function Field({ label, type = "text", defaultValue, className }: { label: string; type?: string; defaultValue?: string; className?: string }) {
+function Field({
+  label,
+  type = "text",
+  defaultValue,
+  className,
+}: {
+  label: string;
+  type?: string;
+  defaultValue?: string;
+  className?: string;
+}) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label>{label}</Label>
@@ -146,7 +198,15 @@ function Field({ label, type = "text", defaultValue, className }: { label: strin
   );
 }
 
-function SwitchRow({ label, description, defaultChecked }: { label: string; description: string; defaultChecked?: boolean }) {
+function SwitchRow({
+  label,
+  description,
+  defaultChecked,
+}: {
+  label: string;
+  description: string;
+  defaultChecked?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 p-4">
       <div>
