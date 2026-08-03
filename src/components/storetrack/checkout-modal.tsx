@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
   customerSummary,
-  listCustomers,
+  customersSnapshot,
   subscribeCustomers,
   type Customer,
 } from "@/lib/customers-store";
@@ -49,8 +49,8 @@ export interface CheckoutConfirmPayload {
 function useCustomers() {
   return useSyncExternalStore(
     (l) => subscribeCustomers(l),
-    () => listCustomers(),
-    () => listCustomers(),
+    () => customersSnapshot(),
+    () => customersSnapshot(),
   );
 }
 

@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   customerSummary,
-  listCustomers,
+  customersSnapshot,
   subscribeCustomers,
 } from "@/lib/customers-store";
 
@@ -41,8 +41,8 @@ function fmtDate(iso?: string) {
 function useCustomers() {
   return useSyncExternalStore(
     (l) => subscribeCustomers(l),
-    () => listCustomers(),
-    () => listCustomers(),
+    () => customersSnapshot(),
+    () => customersSnapshot(),
   );
 }
 
