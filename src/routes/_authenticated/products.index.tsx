@@ -57,7 +57,7 @@ import {
 } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/products")({
+export const Route = createFileRoute("/_authenticated/products/")({
   component: ProductsPage,
 });
 

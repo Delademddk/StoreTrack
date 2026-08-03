@@ -21,7 +21,7 @@ import {
   subscribeCustomers,
 } from "@/lib/customers-store";
 
-export const Route = createFileRoute("/_authenticated/customers")({
+export const Route = createFileRoute("/_authenticated/customers/")({
   component: CustomersPage,
 });
 

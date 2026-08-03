@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { auditLog, products, sales, statusFor, totalQty } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/_authenticated/products/$id")({
+export const Route = createFileRoute("/_authenticated/products/$id/")({
   loader: ({ params }) => {
     const product = products.find((p) => p.id === params.id);
     if (!product) throw notFound();
