@@ -89,15 +89,13 @@ export function RestockModal({
     if (product.isBoxed) {
       if (!Number.isFinite(parsed.b) || parsed.b < 0)
         return "Boxes to add must be zero or a positive number";
-      if (!Number.isInteger(parsed.b))
-        return "Boxes to add must be a whole number";
+      if (!Number.isInteger(parsed.b)) return "Boxes to add must be a whole number";
     }
     if (!Number.isFinite(parsed.p) || parsed.p < 0)
       return product.isBoxed
         ? "Loose items to add must be zero or a positive number"
         : "Individual quantity to add must be zero or a positive number";
-    if (!Number.isInteger(parsed.p))
-      return "Quantity to add must be a whole number";
+    if (!Number.isInteger(parsed.p)) return "Quantity to add must be a whole number";
     if ((product.isBoxed ? parsed.b : 0) === 0 && parsed.p === 0)
       return "Enter at least one box or item to restock";
     return null;

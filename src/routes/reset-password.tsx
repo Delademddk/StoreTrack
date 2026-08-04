@@ -17,7 +17,7 @@ function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-elevated)]">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-(--shadow-elevated)">
         {!sent ? (
           <>
             <div className="mb-6">
@@ -48,9 +48,14 @@ function ResetPasswordPage() {
                   placeholder="you@company.com"
                 />
               </div>
-              <Button type="submit" className="h-11 w-full">Send reset link</Button>
+              <Button type="submit" className="h-11 w-full">
+                Send reset link
+              </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Remembered it? <Link to="/login" className="font-medium text-brand hover:underline">Back to sign in</Link>
+                Remembered it?{" "}
+                <Link to="/login" className="font-medium text-brand hover:underline">
+                  Back to sign in
+                </Link>
               </p>
             </form>
           </>
@@ -61,7 +66,8 @@ function ResetPasswordPage() {
             </div>
             <h1 className="text-lg font-semibold">Check your inbox</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              We sent a reset link to <span className="font-medium text-foreground">{email}</span>. It expires in 30 minutes.
+              We sent a reset link to <span className="font-medium text-foreground">{email}</span>.
+              It expires in 30 minutes.
             </p>
             <Link to="/login">
               <Button className="mt-6 w-full">Back to sign in</Button>

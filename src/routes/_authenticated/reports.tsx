@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { PageHeader, money } from "@/components/storetrack/page-header";
 import { Button } from "@/components/ui/button";
@@ -20,9 +30,15 @@ function ReportsPage() {
         description="Sales, inventory, and audit trails — exportable to PDF, CSV, and Excel."
         actions={
           <>
-            <Button variant="outline" className="gap-2 rounded-xl"><FileText className="size-4" /> PDF</Button>
-            <Button variant="outline" className="gap-2 rounded-xl"><FileSpreadsheet className="size-4" /> Excel</Button>
-            <Button className="gap-2 rounded-xl"><Download className="size-4" /> CSV</Button>
+            <Button variant="outline" className="gap-2 rounded-xl">
+              <FileText className="size-4" /> PDF
+            </Button>
+            <Button variant="outline" className="gap-2 rounded-xl">
+              <FileSpreadsheet className="size-4" /> Excel
+            </Button>
+            <Button className="gap-2 rounded-xl">
+              <Download className="size-4" /> CSV
+            </Button>
           </>
         }
       />
@@ -48,11 +64,39 @@ function ReportsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={revenueSeries} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
-                  <Line type="monotone" dataKey="revenue" stroke="var(--chart-1)" strokeWidth={2.5} dot={false} />
-                  <Line type="monotone" dataKey="orders" stroke="var(--chart-2)" strokeWidth={2} dot={false} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="var(--chart-1)"
+                    strokeWidth={2.5}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="orders"
+                    stroke="var(--chart-2)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -66,9 +110,25 @@ function ReportsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={bestSellers} margin={{ top: 4, right: 4, bottom: 20, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                  />
                   <Bar dataKey="revenue" fill="var(--chart-1)" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -91,7 +151,9 @@ function ReportsPage() {
               <tbody className="divide-y divide-border">
                 {auditLog.map((l) => (
                   <tr key={l.id} className="hover:bg-muted/30">
-                    <td className="px-5 py-3 font-mono text-[11px] text-muted-foreground">{l.at}</td>
+                    <td className="px-5 py-3 font-mono text-[11px] text-muted-foreground">
+                      {l.at}
+                    </td>
                     <td className="px-5 py-3">{l.user}</td>
                     <td className="px-5 py-3 font-medium">{l.action}</td>
                     <td className="px-5 py-3 font-mono text-xs text-brand">{l.target}</td>
@@ -107,7 +169,15 @@ function ReportsPage() {
   );
 }
 
-function Metric({ label, value, tone }: { label: string; value: string; tone: "brand" | "success" | "primary" | "warning" }) {
+function Metric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "brand" | "success" | "primary" | "warning";
+}) {
   const toneCls = {
     brand: "from-brand/10 to-transparent border-brand/20",
     success: "from-success/10 to-transparent border-success/20",
@@ -116,7 +186,9 @@ function Metric({ label, value, tone }: { label: string; value: string; tone: "b
   }[tone];
   return (
     <Card className={`rounded-2xl border p-4 bg-gradient-to-br ${toneCls}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 font-mono text-2xl font-semibold">{value}</p>
     </Card>
   );

@@ -26,9 +26,7 @@ function CustomerNotFound() {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
       <h2 className="text-lg font-semibold">Customer not found</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        This customer may have been removed.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">This customer may have been removed.</p>
       <Button asChild className="mt-4 rounded-xl">
         <Link to="/customers">Back to customers</Link>
       </Button>
@@ -45,11 +43,7 @@ function fmtDate(iso: string) {
 }
 
 function useSnapshot<T>(read: () => T): T {
-  return useSyncExternalStore(
-    (l) => subscribeCustomers(l),
-    read,
-    read,
-  );
+  return useSyncExternalStore((l) => subscribeCustomers(l), read, read);
 }
 
 function CustomerDetailPage() {

@@ -39,7 +39,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   categories,
   products as seedProducts,
@@ -47,14 +53,8 @@ import {
   totalQty,
   type Product,
 } from "@/lib/mock-data";
-import {
-  ProductFormModal,
-  type ProductDraft,
-} from "@/components/storetrack/product-form-modal";
-import {
-  RestockModal,
-  type RestockDraft,
-} from "@/components/storetrack/restock-modal";
+import { ProductFormModal, type ProductDraft } from "@/components/storetrack/product-form-modal";
+import { RestockModal, type RestockDraft } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/products/")({
@@ -64,11 +64,12 @@ export const Route = createFileRoute("/_authenticated/products/")({
 const dash = "—";
 
 const skuFrom = (name: string) => {
-  const slug = name
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 10) || "SKU";
+  const slug =
+    name
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 10) || "SKU";
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `SKU-${slug}-${rand}`;
 };
@@ -94,7 +95,8 @@ function ProductsPage() {
       if (category !== "all" && p.category !== category) return false;
       const s = statusFor(p);
       if (status !== "all" && s !== status) return false;
-      if (q && !`${p.name} ${p.sku} ${p.brand}`.toLowerCase().includes(q.toLowerCase())) return false;
+      if (q && !`${p.name} ${p.sku} ${p.brand}`.toLowerCase().includes(q.toLowerCase()))
+        return false;
       return true;
     });
   }, [items, q, category, status]);
@@ -206,17 +208,30 @@ function ProductsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search SKU, name, brand…" className="h-9 rounded-lg border-transparent bg-muted pl-9" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search SKU, name, brand…"
+              className="h-9 rounded-lg border-transparent bg-muted pl-9"
+            />
           </div>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-9 w-[170px] rounded-lg"><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-[170px] rounded-lg">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All categories</SelectItem>
-              {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[150px] rounded-lg"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-[150px] rounded-lg">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Any status</SelectItem>
               <SelectItem value="in_stock">In stock</SelectItem>
@@ -224,12 +239,26 @@ function ProductsPage() {
               <SelectItem value="out_of_stock">Out of stock</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="rounded-lg"><Filter className="size-4" /></Button>
+          <Button variant="ghost" size="icon" className="rounded-lg">
+            <Filter className="size-4" />
+          </Button>
           <div className="ml-auto flex overflow-hidden rounded-lg border border-border">
-            <button onClick={() => setView("list")} className={cn("grid size-9 place-items-center", view === "list" ? "bg-muted text-foreground" : "text-muted-foreground")}>
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "grid size-9 place-items-center",
+                view === "list" ? "bg-muted text-foreground" : "text-muted-foreground",
+              )}
+            >
               <List className="size-4" />
             </button>
-            <button onClick={() => setView("grid")} className={cn("grid size-9 place-items-center border-l border-border", view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground")}>
+            <button
+              onClick={() => setView("grid")}
+              className={cn(
+                "grid size-9 place-items-center border-l border-border",
+                view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground",
+              )}
+            >
               <LayoutGrid className="size-4" />
             </button>
           </div>
@@ -257,8 +286,16 @@ function ProductsPage() {
                 {filtered.map((p) => (
                   <tr key={p.id} className="cursor-pointer transition-colors hover:bg-muted/30">
                     <td className="px-5 py-3">
-                      <Link to="/products/$id" params={{ id: p.id }} className="flex items-center gap-3">
-                        <img src={p.image} alt="" className="size-10 rounded-lg object-cover ring-1 ring-border" />
+                      <Link
+                        to="/products/$id"
+                        params={{ id: p.id }}
+                        className="flex items-center gap-3"
+                      >
+                        <img
+                          src={p.image}
+                          alt=""
+                          className="size-10 rounded-lg object-cover ring-1 ring-border"
+                        />
                         <div>
                           <p className="font-medium">{p.name}</p>
                           <p className="font-mono text-[10px] text-muted-foreground">{p.sku}</p>
@@ -282,10 +319,18 @@ function ProductsPage() {
                     <td className="px-5 py-3 text-right font-mono">{p.extraPieces}</td>
                     <td className="px-5 py-3 text-right font-mono font-semibold">{totalQty(p)}</td>
                     <td className="px-5 py-3 text-right font-mono">
-                      {p.isBoxed ? moneyExact(p.pricePerBox) : <span className="text-muted-foreground">{dash}</span>}
+                      {p.isBoxed ? (
+                        moneyExact(p.pricePerBox)
+                      ) : (
+                        <span className="text-muted-foreground">{dash}</span>
+                      )}
                     </td>
-                    <td className="px-5 py-3 text-right font-mono">{moneyExact(p.individualPrice)}</td>
-                    <td className="px-5 py-3 text-right"><StatusBadge status={statusFor(p)} /></td>
+                    <td className="px-5 py-3 text-right font-mono">
+                      {moneyExact(p.individualPrice)}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <StatusBadge status={statusFor(p)} />
+                    </td>
                     <td className="px-5 py-3 text-right">
                       <RowActions
                         product={p}
@@ -302,27 +347,40 @@ function ProductsPage() {
             </table>
           </div>
           {filtered.length === 0 && (
-            <div className="p-10 text-center text-sm text-muted-foreground">No products match your filters.</div>
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              No products match your filters.
+            </div>
           )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((p) => (
-            <Card key={p.id} className="group relative overflow-hidden rounded-2xl border-border p-0 transition-shadow hover:shadow-[var(--shadow-elevated)]">
+            <Card
+              key={p.id}
+              className="group relative overflow-hidden rounded-2xl border-border p-0 transition-shadow hover:shadow-[var(--shadow-elevated)]"
+            >
               <Link to="/products/$id" params={{ id: p.id }} className="block">
                 <div className="aspect-[4/3] overflow-hidden bg-muted">
-                  <img src={p.image} alt={p.name} className="size-full object-cover transition-transform group-hover:scale-105" />
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="size-full object-cover transition-transform group-hover:scale-105"
+                  />
                 </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{p.name}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">{p.category} · {p.brand || dash}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {p.category} · {p.brand || dash}
+                      </p>
                     </div>
                     <StatusBadge status={statusFor(p)} />
                   </div>
                   <div className="mt-3 flex items-baseline justify-between">
-                    <span className="font-mono text-base font-semibold">{moneyExact(p.individualPrice)}</span>
+                    <span className="font-mono text-base font-semibold">
+                      {moneyExact(p.individualPrice)}
+                    </span>
                     <span className="text-[11px] text-muted-foreground">
                       {totalQty(p)} in stock{p.isBoxed ? ` · ${p.boxes} boxes` : ""}
                     </span>
@@ -344,7 +402,8 @@ function ProductsPage() {
           ))}
           {filtered.length === 0 && (
             <Card className="col-span-full rounded-2xl border-dashed p-10 text-center text-sm text-muted-foreground">
-              <Package className="mx-auto mb-3 size-8 text-muted-foreground" /> No products match your filters.
+              <Package className="mx-auto mb-3 size-8 text-muted-foreground" /> No products match
+              your filters.
             </Card>
           )}
         </div>
@@ -367,10 +426,7 @@ function ProductsPage() {
         }}
       />
 
-      <AlertDialog
-        open={!!confirmDelete}
-        onOpenChange={(o) => !o && setConfirmDelete(null)}
-      >
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this product?</AlertDialogTitle>

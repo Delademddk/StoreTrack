@@ -25,11 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  suppliers,
-  totalQty,
-  type Product,
-} from "@/lib/mock-data";
+import { suppliers, totalQty, type Product } from "@/lib/mock-data";
 import { categoriesStore, useCategories } from "@/lib/categories-store";
 
 const CREATE_CATEGORY_VALUE = "__create_new_category__";
@@ -69,9 +65,7 @@ export function ProductFormModal({
   onSubmit: (draft: ProductDraft) => void;
 }) {
   const categories = useCategories();
-  const [form, setForm] = useState<ProductDraft>(() =>
-    emptyDraft(categories[0]?.name ?? ""),
-  );
+  const [form, setForm] = useState<ProductDraft>(() => emptyDraft(categories[0]?.name ?? ""));
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false);
 
   useEffect(() => {
@@ -138,9 +132,7 @@ export function ProductFormModal({
       <DialogContent className="max-h-[92vh] max-w-2xl overflow-hidden p-0 sm:rounded-2xl">
         <form onSubmit={handleSubmit} className="flex max-h-[92vh] flex-col">
           <DialogHeader className="border-b border-border px-6 py-4">
-            <DialogTitle>
-              {mode === "create" ? "Add product" : "Edit product"}
-            </DialogTitle>
+            <DialogTitle>{mode === "create" ? "Add product" : "Edit product"}</DialogTitle>
             <DialogDescription>
               {mode === "create"
                 ? "Create a new SKU. Choose whether it is supplied in boxes to unlock box inventory."
@@ -192,7 +184,9 @@ export function ProductFormModal({
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Brand <span className="text-muted-foreground">(optional)</span></Label>
+                    <Label>
+                      Brand <span className="text-muted-foreground">(optional)</span>
+                    </Label>
                     <Input
                       value={form.brand}
                       onChange={(e) => set("brand", e.target.value)}
@@ -200,7 +194,9 @@ export function ProductFormModal({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Supplier <span className="text-muted-foreground">(optional)</span></Label>
+                    <Label>
+                      Supplier <span className="text-muted-foreground">(optional)</span>
+                    </Label>
                     <Select value={form.supplier} onValueChange={(v) => set("supplier", v)}>
                       <SelectTrigger className="h-10">
                         <SelectValue />
@@ -215,7 +211,9 @@ export function ProductFormModal({
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Barcode <span className="text-muted-foreground">(optional)</span></Label>
+                    <Label>
+                      Barcode <span className="text-muted-foreground">(optional)</span>
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         value={form.barcode ?? ""}
@@ -238,7 +236,9 @@ export function ProductFormModal({
                     </div>
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Description <span className="text-muted-foreground">(optional)</span></Label>
+                    <Label>
+                      Description <span className="text-muted-foreground">(optional)</span>
+                    </Label>
                     <Textarea
                       value={form.description}
                       onChange={(e) => set("description", e.target.value)}
@@ -256,10 +256,7 @@ export function ProductFormModal({
                       Enable to track boxes, items per box, and loose pieces separately.
                     </p>
                   </div>
-                  <Switch
-                    checked={form.isBoxed}
-                    onCheckedChange={(v) => set("isBoxed", v)}
-                  />
+                  <Switch checked={form.isBoxed} onCheckedChange={(v) => set("isBoxed", v)} />
                 </div>
 
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -371,9 +368,7 @@ export function ProductFormModal({
                       min={0}
                       step="0.01"
                       value={form.individualPrice}
-                      onChange={(e) =>
-                        set("individualPrice", Math.max(0, Number(e.target.value)))
-                      }
+                      onChange={(e) => set("individualPrice", Math.max(0, Number(e.target.value)))}
                       className="h-10 font-mono"
                     />
                   </div>

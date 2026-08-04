@@ -79,34 +79,55 @@ function KpiCard({
           <span
             className={cn(
               "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-              delta.positive
-                ? "bg-success/10 text-success"
-                : "bg-destructive/10 text-destructive",
+              delta.positive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
             )}
           >
-            {delta.positive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+            {delta.positive ? (
+              <ArrowUpRight className="size-3" />
+            ) : (
+              <ArrowDownRight className="size-3" />
+            )}
             {delta.value}
           </span>
         )}
       </div>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 font-mono text-[26px] font-semibold tracking-tight text-foreground">{value}</p>
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-mono text-[26px] font-semibold tracking-tight text-foreground">
+        {value}
+      </p>
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </Card>
   );
 }
 
-const CHART_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 function DashboardPage() {
   const { user } = useAuth();
   const [range, setRange] = useState("month");
-  const trimmed = range === "week" ? revenueSeries.slice(-7) : range === "today" ? revenueSeries.slice(-1) : range === "year" ? revenueSeries : revenueSeries.slice(-30);
-  const lowStockProducts = products
-    .filter((p) => statusFor(p) !== "in_stock")
-    .slice(0, 5);
+  const trimmed =
+    range === "week"
+      ? revenueSeries.slice(-7)
+      : range === "today"
+        ? revenueSeries.slice(-1)
+        : range === "year"
+          ? revenueSeries
+          : revenueSeries.slice(-30);
+  const lowStockProducts = products.filter((p) => statusFor(p) !== "in_stock").slice(0, 5);
 
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <>
@@ -115,7 +136,9 @@ function DashboardPage() {
         description={`${today} · ${user?.storeName ?? ""}`}
         actions={
           <>
-            <Button variant="outline" className="rounded-xl">Export CSV</Button>
+            <Button variant="outline" className="rounded-xl">
+              Export CSV
+            </Button>
             <Link to="/products/new">
               <Button className="rounded-xl">+ Add product</Button>
             </Link>
@@ -125,12 +148,49 @@ function DashboardPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Total products" value={kpi.totalProducts.toString()} icon={Package} tone="brand" sub={`${kpi.outOfStock} out of stock`} />
-        <KpiCard label="Items in stock" value={kpi.itemsInStock.toLocaleString()} icon={Boxes} tone="primary" delta={{ value: "2.4%", positive: true }} />
-        <KpiCard label="Today's sales" value={money(kpi.todaySales)} icon={ShoppingBag} tone="success" delta={{ value: "12.4%", positive: true }} sub={`${kpi.todayOrders} orders`} />
-        <KpiCard label="Weekly revenue" value={money(kpi.weeklyRevenue)} icon={DollarSign} tone="brand" delta={{ value: "8.1%", positive: true }} />
-        <KpiCard label="Inventory value" value={money(kpi.inventoryValue)} icon={Warehouse} tone="primary" sub="Retail valuation" />
-        <KpiCard label="Low stock" value={kpi.lowStock.toString()} icon={TriangleAlert} tone="warning" sub="Needs reorder" />
+        <KpiCard
+          label="Total products"
+          value={kpi.totalProducts.toString()}
+          icon={Package}
+          tone="brand"
+          sub={`${kpi.outOfStock} out of stock`}
+        />
+        <KpiCard
+          label="Items in stock"
+          value={kpi.itemsInStock.toLocaleString()}
+          icon={Boxes}
+          tone="primary"
+          delta={{ value: "2.4%", positive: true }}
+        />
+        <KpiCard
+          label="Today's sales"
+          value={money(kpi.todaySales)}
+          icon={ShoppingBag}
+          tone="success"
+          delta={{ value: "12.4%", positive: true }}
+          sub={`${kpi.todayOrders} orders`}
+        />
+        <KpiCard
+          label="Weekly revenue"
+          value={money(kpi.weeklyRevenue)}
+          icon={DollarSign}
+          tone="brand"
+          delta={{ value: "8.1%", positive: true }}
+        />
+        <KpiCard
+          label="Inventory value"
+          value={money(kpi.inventoryValue)}
+          icon={Warehouse}
+          tone="primary"
+          sub="Retail valuation"
+        />
+        <KpiCard
+          label="Low stock"
+          value={kpi.lowStock.toString()}
+          icon={TriangleAlert}
+          tone="warning"
+          sub="Needs reorder"
+        />
       </div>
 
       {/* Chart + activity */}
@@ -139,14 +199,24 @@ function DashboardPage() {
           <div className="flex flex-col gap-3 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-sm font-semibold">Revenue analytics</h2>
-              <p className="text-xs text-muted-foreground">Consolidated across all sales channels</p>
+              <p className="text-xs text-muted-foreground">
+                Consolidated across all sales channels
+              </p>
             </div>
             <Tabs value={range} onValueChange={setRange}>
               <TabsList className="h-8">
-                <TabsTrigger value="today" className="text-xs">Today</TabsTrigger>
-                <TabsTrigger value="week" className="text-xs">Week</TabsTrigger>
-                <TabsTrigger value="month" className="text-xs">Month</TabsTrigger>
-                <TabsTrigger value="year" className="text-xs">Year</TabsTrigger>
+                <TabsTrigger value="today" className="text-xs">
+                  Today
+                </TabsTrigger>
+                <TabsTrigger value="week" className="text-xs">
+                  Week
+                </TabsTrigger>
+                <TabsTrigger value="month" className="text-xs">
+                  Month
+                </TabsTrigger>
+                <TabsTrigger value="year" className="text-xs">
+                  Year
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -160,8 +230,18 @@ function DashboardPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `$${v / 1000}k`}
+                />
                 <Tooltip
                   contentStyle={{
                     background: "var(--popover)",
@@ -171,7 +251,13 @@ function DashboardPage() {
                   }}
                   formatter={(v: number) => moneyExact(v)}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="var(--chart-1)" strokeWidth={2.5} fill="url(#revGrad)" />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="var(--chart-1)"
+                  strokeWidth={2.5}
+                  fill="url(#revGrad)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -202,7 +288,9 @@ function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold">{a.title}</p>
                   <p className="truncate text-[11px] text-muted-foreground">{a.description}</p>
-                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{a.at} · {a.actor}</p>
+                  <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                    {a.at} · {a.actor}
+                  </p>
                 </div>
               </li>
             ))}
@@ -221,12 +309,33 @@ function DashboardPage() {
           </div>
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bestSellers} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 8 }}>
+              <BarChart
+                data={bestSellers}
+                layout="vertical"
+                margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "var(--foreground)" }} tickLine={false} axisLine={false} width={160} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: "var(--foreground)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={160}
+                />
                 <Tooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
+                  contentStyle={{
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
                   formatter={(v: number) => `${v} units`}
                 />
                 <Bar dataKey="units" fill="var(--chart-1)" radius={[0, 8, 8, 0]} />
@@ -241,13 +350,24 @@ function DashboardPage() {
           <div className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={categoryBreakdown} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={2}>
+                <Pie
+                  data={categoryBreakdown}
+                  dataKey="value"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={2}
+                >
                   {categoryBreakdown.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
+                  contentStyle={{
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
                   formatter={(v: number) => `${v}%`}
                 />
               </PieChart>
@@ -257,7 +377,10 @@ function DashboardPage() {
             {categoryBreakdown.map((c, i) => (
               <li key={c.name} className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <span className="size-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                  />
                   {c.name}
                 </span>
                 <span className="font-mono text-muted-foreground">{c.value}%</span>
@@ -272,9 +395,13 @@ function DashboardPage() {
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>
             <h2 className="text-sm font-semibold">Low stock intelligence</h2>
-            <p className="text-xs text-muted-foreground">Predicted days-to-stockout based on recent sales</p>
+            <p className="text-xs text-muted-foreground">
+              Predicted days-to-stockout based on recent sales
+            </p>
           </div>
-          <Link to="/products" className="text-xs font-semibold text-brand hover:underline">View all →</Link>
+          <Link to="/products" className="text-xs font-semibold text-brand hover:underline">
+            View all →
+          </Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -296,7 +423,11 @@ function DashboardPage() {
                   <tr key={p.id} className="transition-colors hover:bg-muted/30">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <img src={p.image} alt="" className="size-9 rounded-lg object-cover ring-1 ring-border" />
+                        <img
+                          src={p.image}
+                          alt=""
+                          className="size-9 rounded-lg object-cover ring-1 ring-border"
+                        />
                         <div>
                           <p className="font-medium">{p.name}</p>
                           <p className="font-mono text-[10px] text-muted-foreground">{p.sku}</p>
@@ -304,17 +435,27 @@ function DashboardPage() {
                       </div>
                     </td>
                     <td className="px-5 py-3 text-right font-mono">{qty}</td>
-                    <td className="px-5 py-3 text-right font-mono text-muted-foreground">{burn.toFixed(1)}/day</td>
+                    <td className="px-5 py-3 text-right font-mono text-muted-foreground">
+                      {burn.toFixed(1)}/day
+                    </td>
                     <td className="px-5 py-3 text-right">
-                      <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                        days <= 3 ? "bg-destructive/10 text-destructive" : "bg-warning/15 text-warning-foreground dark:text-warning",
-                      )}>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                          days <= 3
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-warning/15 text-warning-foreground dark:text-warning",
+                        )}
+                      >
                         ~{days} days
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <Link to="/products/$id" params={{ id: p.id }} className="text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1">
+                      <Link
+                        to="/products/$id"
+                        params={{ id: p.id }}
+                        className="text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1"
+                      >
                         <Receipt className="size-3" /> Restock
                       </Link>
                     </td>

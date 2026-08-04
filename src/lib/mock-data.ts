@@ -199,15 +199,16 @@ export const products: Product[] = [
   },
 ];
 
-export const categories = [
-  "Electronics",
-  "Peripherals",
-  "Computers",
-  "Audio",
-  "Home & Living",
-];
+export const categories = ["Electronics", "Peripherals", "Computers", "Audio", "Home & Living"];
 
-export const suppliers = ["Northwind Traders", "Keyboardery", "Halcyon Direct", "Kiln & Co", "Muji Wholesale", "Nord Distributors"];
+export const suppliers = [
+  "Northwind Traders",
+  "Keyboardery",
+  "Halcyon Direct",
+  "Kiln & Co",
+  "Muji Wholesale",
+  "Nord Distributors",
+];
 
 export interface Sale {
   id: string;
@@ -293,11 +294,56 @@ export interface AppUser {
 }
 
 export const users: AppUser[] = [
-  { id: "u_01", name: "Alex Rivera", username: "alex", email: "alex@storetrack.io", phone: "+254 700 000 001", role: "Admin", status: "Active", lastActive: "2 min ago" },
-  { id: "u_02", name: "Sam Kariuki", username: "sam.k", email: "sam@storetrack.io", phone: "+254 700 000 002", role: "Manager", status: "Active", lastActive: "1 h ago" },
-  { id: "u_03", name: "Priya Menon", username: "priyam", email: "priya@storetrack.io", phone: "+254 700 000 003", role: "Cashier", status: "Active", lastActive: "just now" },
-  { id: "u_04", name: "Diego Alvarez", username: "diego", email: "diego@storetrack.io", phone: "+254 700 000 004", role: "Keeper", status: "Disabled", lastActive: "3 d ago" },
-  { id: "u_05", name: "Amara Okafor", username: "amara", email: "amara@storetrack.io", phone: "+254 700 000 005", role: "Manager", status: "Active", lastActive: "12 min ago" },
+  {
+    id: "u_01",
+    name: "Alex Rivera",
+    username: "alex",
+    email: "alex@storetrack.io",
+    phone: "+254 700 000 001",
+    role: "Admin",
+    status: "Active",
+    lastActive: "2 min ago",
+  },
+  {
+    id: "u_02",
+    name: "Sam Kariuki",
+    username: "sam.k",
+    email: "sam@storetrack.io",
+    phone: "+254 700 000 002",
+    role: "Manager",
+    status: "Active",
+    lastActive: "1 h ago",
+  },
+  {
+    id: "u_03",
+    name: "Priya Menon",
+    username: "priyam",
+    email: "priya@storetrack.io",
+    phone: "+254 700 000 003",
+    role: "Cashier",
+    status: "Active",
+    lastActive: "just now",
+  },
+  {
+    id: "u_04",
+    name: "Diego Alvarez",
+    username: "diego",
+    email: "diego@storetrack.io",
+    phone: "+254 700 000 004",
+    role: "Keeper",
+    status: "Disabled",
+    lastActive: "3 d ago",
+  },
+  {
+    id: "u_05",
+    name: "Amara Okafor",
+    username: "amara",
+    email: "amara@storetrack.io",
+    phone: "+254 700 000 005",
+    role: "Manager",
+    status: "Active",
+    lastActive: "12 min ago",
+  },
 ];
 
 export const permissions = [
@@ -327,24 +373,69 @@ export interface ActivityEntry {
 }
 
 export const activity: ActivityEntry[] = [
-  { id: "a_01", kind: "sale", title: "Sale completed · INV-9204", description: "3× Studio Pro Headphones — $411.97", actor: "Alex R.", at: "2 min ago" },
-  { id: "a_02", kind: "low_stock", title: "Low stock warning", description: "Matte Black Kettle — 4 units remaining", actor: "System", at: "14 min ago" },
-  { id: "a_03", kind: "restock", title: "Stock adjusted", description: "+50 units of Artisan Ceramic Mug Set", actor: "Sam K.", at: "1 h ago" },
-  { id: "a_04", kind: "edit", title: "Price updated", description: "MX-Wireless Mouse G2 — $59 → $64.50", actor: "Alex R.", at: "3 h ago" },
-  { id: "a_05", kind: "user", title: "New user added", description: "amara@storetrack.io granted Manager role", actor: "Alex R.", at: "yesterday" },
-  { id: "a_06", kind: "settings", title: "Backup created", description: "Full database backup — 42 MB", actor: "System", at: "yesterday" },
+  {
+    id: "a_01",
+    kind: "sale",
+    title: "Sale completed · INV-9204",
+    description: "3× Studio Pro Headphones — $411.97",
+    actor: "Alex R.",
+    at: "2 min ago",
+  },
+  {
+    id: "a_02",
+    kind: "low_stock",
+    title: "Low stock warning",
+    description: "Matte Black Kettle — 4 units remaining",
+    actor: "System",
+    at: "14 min ago",
+  },
+  {
+    id: "a_03",
+    kind: "restock",
+    title: "Stock adjusted",
+    description: "+50 units of Artisan Ceramic Mug Set",
+    actor: "Sam K.",
+    at: "1 h ago",
+  },
+  {
+    id: "a_04",
+    kind: "edit",
+    title: "Price updated",
+    description: "MX-Wireless Mouse G2 — $59 → $64.50",
+    actor: "Alex R.",
+    at: "3 h ago",
+  },
+  {
+    id: "a_05",
+    kind: "user",
+    title: "New user added",
+    description: "amara@storetrack.io granted Manager role",
+    actor: "Alex R.",
+    at: "yesterday",
+  },
+  {
+    id: "a_06",
+    kind: "settings",
+    title: "Backup created",
+    description: "Full database backup — 42 MB",
+    actor: "System",
+    at: "yesterday",
+  },
 ];
 
 // 30-day revenue series for the dashboard chart
-export const revenueSeries: { day: string; revenue: number; orders: number }[] = Array.from({ length: 30 }, (_, i) => {
-  const base = 3200 + Math.sin(i / 3) * 900 + i * 40;
-  const noise = (Math.sin(i * 1.7) + Math.cos(i * 0.9)) * 400;
-  return {
-    day: `Day ${i + 1}`,
-    revenue: Math.round(base + noise),
-    orders: Math.round(20 + Math.sin(i / 2) * 6 + i * 0.3),
-  };
-});
+export const revenueSeries: { day: string; revenue: number; orders: number }[] = Array.from(
+  { length: 30 },
+  (_, i) => {
+    const base = 3200 + Math.sin(i / 3) * 900 + i * 40;
+    const noise = (Math.sin(i * 1.7) + Math.cos(i * 0.9)) * 400;
+    return {
+      day: `Day ${i + 1}`,
+      revenue: Math.round(base + noise),
+      orders: Math.round(20 + Math.sin(i / 2) * 6 + i * 0.3),
+    };
+  },
+);
 
 export const bestSellers = [
   { name: "Studio Pro Headphones", units: 142, revenue: 18452 },
@@ -372,13 +463,62 @@ export interface AuditEntry {
 }
 
 export const auditLog: AuditEntry[] = [
-  { id: "l_01", at: "2026-07-11 14:22", user: "Alex R.", action: "Sale Completed", target: "INV-9204", description: "3× Studio Pro Headphones — $411.97" },
-  { id: "l_02", at: "2026-07-11 13:45", user: "Alex R.", action: "Stock Adjusted", target: "SKU-CER-ARTS", description: "+50 units, reason: restock delivery" },
-  { id: "l_03", at: "2026-07-11 11:30", user: "System", action: "Low Stock Alert", target: "SKU-KTL-MBK", description: "4/10 threshold breached" },
-  { id: "l_04", at: "2026-07-10 18:41", user: "Alex R.", action: "Sale Completed", target: "INV-9198", description: "$664.40, Bloom Interiors Ltd" },
-  { id: "l_05", at: "2026-07-10 09:02", user: "Alex R.", action: "User Created", target: "amara@storetrack.io", description: "Role: Manager" },
-  { id: "l_06", at: "2026-07-09 21:00", user: "System", action: "Backup Created", target: "backup-2026-07-09.zip", description: "Full DB backup — 42 MB" },
-  { id: "l_07", at: "2026-07-09 14:10", user: "Sam K.", action: "Product Edited", target: "SKU-LOGI-992", description: "Price changed $59 → $64.50" },
+  {
+    id: "l_01",
+    at: "2026-07-11 14:22",
+    user: "Alex R.",
+    action: "Sale Completed",
+    target: "INV-9204",
+    description: "3× Studio Pro Headphones — $411.97",
+  },
+  {
+    id: "l_02",
+    at: "2026-07-11 13:45",
+    user: "Alex R.",
+    action: "Stock Adjusted",
+    target: "SKU-CER-ARTS",
+    description: "+50 units, reason: restock delivery",
+  },
+  {
+    id: "l_03",
+    at: "2026-07-11 11:30",
+    user: "System",
+    action: "Low Stock Alert",
+    target: "SKU-KTL-MBK",
+    description: "4/10 threshold breached",
+  },
+  {
+    id: "l_04",
+    at: "2026-07-10 18:41",
+    user: "Alex R.",
+    action: "Sale Completed",
+    target: "INV-9198",
+    description: "$664.40, Bloom Interiors Ltd",
+  },
+  {
+    id: "l_05",
+    at: "2026-07-10 09:02",
+    user: "Alex R.",
+    action: "User Created",
+    target: "amara@storetrack.io",
+    description: "Role: Manager",
+  },
+  {
+    id: "l_06",
+    at: "2026-07-09 21:00",
+    user: "System",
+    action: "Backup Created",
+    target: "backup-2026-07-09.zip",
+    description: "Full DB backup — 42 MB",
+  },
+  {
+    id: "l_07",
+    at: "2026-07-09 14:10",
+    user: "Sam K.",
+    action: "Product Edited",
+    target: "SKU-LOGI-992",
+    description: "Price changed $59 → $64.50",
+  },
 ];
 
 export const kpi = {
@@ -387,10 +527,7 @@ export const kpi = {
   todaySales: 4290.45,
   todayOrders: 32,
   weeklyRevenue: 28492.9,
-  inventoryValue: products.reduce(
-    (s, p) => s + totalQty(p) * p.individualPrice,
-    0,
-  ),
+  inventoryValue: products.reduce((s, p) => s + totalQty(p) * p.individualPrice, 0),
   lowStock: products.filter((p) => statusFor(p) === "low_stock").length,
   outOfStock: products.filter((p) => statusFor(p) === "out_of_stock").length,
 };
