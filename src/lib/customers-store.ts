@@ -98,6 +98,9 @@ let customers: Customer[] = [
 ];
 
 let ledger: LedgerEntry[] = [];
+let customersSnapshot: Customer[] | undefined;
+const ledgerSnapshots = new Map<string, LedgerEntry[]>();
+const summarySnapshots = new Map<string, CustomerSummary>();
 
 // Seed a small history so the module has content on first load.
 function seedLedger() {
@@ -171,6 +174,17 @@ seedLedger();
 const listeners = new Set<Listener>();
 const notify = () => listeners.forEach((l) => l());
 
+function invalidateSnapshots(customerId?: string) {
+  customersSnapshot = undefined;
+  if (customerId) {
+    ledgerSnapshots.delete(customerId);
+    summarySnapshots.delete(customerId);
+    return;
+  }
+  ledgerSnapshots.clear();
+  summarySnapshots.clear();
+}
+
 export function subscribeCustomers(l: Listener) {
   listeners.add(l);
   return () => listeners.delete(l);
@@ -179,7 +193,10 @@ export function subscribeCustomers(l: Listener) {
 // -------- Reads --------------------------------------------------------
 
 export function listCustomers(): Customer[] {
-  return [...customers].sort((a, b) => a.name.localeCompare(b.name));
+  if (!customersSnapshot) {
+    customersSnapshot = [...customers].sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return customersSnapshot;
 }
 
 export function getCustomer(id: string): Customer | undefined {
@@ -187,7 +204,14 @@ export function getCustomer(id: string): Customer | undefined {
 }
 
 export function listLedger(customerId: string): LedgerEntry[] {
-  return ledger.filter((e) => e.customerId === customerId).sort((a, b) => a.at.localeCompare(b.at));
+  let snapshot = ledgerSnapshots.get(customerId);
+  if (!snapshot) {
+    snapshot = ledger
+      .filter((e) => e.customerId === customerId)
+      .sort((a, b) => a.at.localeCompare(b.at));
+    ledgerSnapshots.set(customerId, snapshot);
+  }
+  return snapshot;
 }
 
 export interface CustomerSummary {
@@ -201,6 +225,9 @@ export interface CustomerSummary {
 }
 
 export function customerSummary(customerId: string): CustomerSummary {
+  const cached = summarySnapshots.get(customerId);
+  if (cached) return cached;
+
   const entries = listLedger(customerId);
   let totalPurchases = 0;
   let totalPaid = 0;
@@ -229,7 +256,7 @@ export function customerSummary(customerId: string): CustomerSummary {
     status = nextDueAt && nextDueAt < new Date().toISOString() ? "overdue" : "outstanding";
   }
 
-  return {
+  const summary: CustomerSummary = {
     totalPurchases,
     totalPaid,
     outstanding,
@@ -238,6 +265,8 @@ export function customerSummary(customerId: string): CustomerSummary {
     nextDueAt,
     status,
   };
+  summarySnapshots.set(customerId, summary);
+  return summary;
 }
 
 // -------- Mutations ----------------------------------------------------
@@ -259,6 +288,7 @@ export function createCustomer(input: {
     updatedAt: nowIso,
   };
   customers = [...customers, c];
+  invalidateSnapshots();
   notify();
   return c;
 }
@@ -317,6 +347,7 @@ export function recordCreditSale(draft: CreditSaleDraft): {
   if (customer) {
     customer.updatedAt = at;
   }
+  invalidateSnapshots(draft.customerId);
   notify();
   return { purchase, payment };
 }
@@ -337,6 +368,7 @@ export function recordPayment(customerId: string, draft: PaymentDraft): LedgerEn
   ledger = [...ledger, entry];
   const customer = customers.find((c) => c.id === customerId);
   if (customer) customer.updatedAt = at;
+  invalidateSnapshots(customerId);
   notify();
   return entry;
 }
