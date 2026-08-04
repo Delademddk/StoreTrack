@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
-  customerSummary,
+  customerSummarySnapshot,
   getCustomer,
-  listLedger,
+  ledgerSnapshot,
   recordPayment,
   subscribeCustomers,
   type LedgerEntry,
@@ -49,8 +49,8 @@ function useSnapshot<T>(read: () => T): T {
 function CustomerDetailPage() {
   const { id } = Route.useParams();
   const customer = useSnapshot(() => getCustomer(id));
-  const ledger = useSnapshot(() => listLedger(id));
-  const summary = useSnapshot(() => customerSummary(id));
+  const ledger = useSnapshot(() => ledgerSnapshot(id));
+  const summary = useSnapshot(() => customerSummarySnapshot(id));
   const [payOpen, setPayOpen] = useState(false);
 
   if (!customer) {

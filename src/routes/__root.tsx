@@ -117,6 +117,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
+    // The pre-hydration theme script toggles `dark` on <html>, which React
+    // would otherwise flag as a hydration mismatch.
     <html lang="en" suppressHydrationWarning>
       <head>
         <script

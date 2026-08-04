@@ -172,7 +172,24 @@ seedLedger();
 // -------- Subscriptions ------------------------------------------------
 
 const listeners = new Set<Listener>();
-const notify = () => listeners.forEach((l) => l());
+const snapshotCache = new Map<string, unknown>();
+
+/**
+ * Memoizes derived reads so `useSyncExternalStore` receives a referentially
+ * stable snapshot between mutations. Without this, every render produces a
+ * fresh array/object and React re-renders forever.
+ */
+function cached<T>(key: string, read: () => T): T {
+  if (snapshotCache.has(key)) return snapshotCache.get(key) as T;
+  const value = read();
+  snapshotCache.set(key, value);
+  return value;
+}
+
+const notify = () => {
+  snapshotCache.clear();
+  listeners.forEach((l) => l());
+};
 
 function invalidateSnapshots(customerId?: string) {
   customersSnapshot = undefined;
@@ -188,6 +205,20 @@ function invalidateSnapshots(customerId?: string) {
 export function subscribeCustomers(l: Listener) {
   listeners.add(l);
   return () => listeners.delete(l);
+}
+
+// -------- Stable snapshots (for useSyncExternalStore) ------------------
+
+export function customersSnapshot(): Customer[] {
+  return cached("customers", listCustomers);
+}
+
+export function ledgerSnapshot(customerId: string): LedgerEntry[] {
+  return cached(`ledger:${customerId}`, () => listLedger(customerId));
+}
+
+export function customerSummarySnapshot(customerId: string): CustomerSummary {
+  return cached(`summary:${customerId}`, () => customerSummary(customerId));
 }
 
 // -------- Reads --------------------------------------------------------

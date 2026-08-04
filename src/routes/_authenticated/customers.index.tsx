@@ -15,9 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { customerSummary, listCustomers, subscribeCustomers } from "@/lib/customers-store";
+import {
+  customerSummary,
+  customersSnapshot,
+  subscribeCustomers,
+} from "@/lib/customers-store";
 
-export const Route = createFileRoute("/_authenticated/customers")({
+export const Route = createFileRoute("/_authenticated/customers/")({
   component: CustomersPage,
 });
 
@@ -37,8 +41,8 @@ function fmtDate(iso?: string) {
 function useCustomers() {
   return useSyncExternalStore(
     (l) => subscribeCustomers(l),
-    () => listCustomers(),
-    () => listCustomers(),
+    () => customersSnapshot(),
+    () => customersSnapshot(),
   );
 }
 
