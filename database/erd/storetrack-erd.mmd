@@ -1,0 +1,195 @@
+---
+title: StoreTrack V3 Entity Relationship Diagram
+---
+
+erDiagram
+    Roles ||--o{ RolePermissions : has
+    Permissions ||--o{ RolePermissions : has
+    Roles ||--o{ Users : has
+    Categories ||--o{ Products : contains
+    Users ||--o{ Sales : makes
+    Customers ||--o{ Sales : places
+    Sales ||--o{ SaleItems : contains
+    Products ||--o{ SaleItems : listed_in
+    Customers ||--o{ LedgerEntries : tracks
+    Sales ||--o{ LedgerEntries : references
+    Users ||--o{ AuditLog : creates
+    Users ||--o{ InventoryMovements : records
+    Products ||--o{ InventoryMovements : adjusts
+
+    Roles {
+        NVARCHAR50 Id PK
+        NVARCHAR100 Name UK
+        NVARCHAR500 Description
+        DATETIME2 CreatedAt
+    }
+
+    Permissions {
+        NVARCHAR50 Id PK
+        NVARCHAR200 Name UK
+        NVARCHAR500 Description
+    }
+
+    RolePermissions {
+        NVARCHAR50 RoleId PK_FK
+        NVARCHAR50 PermissionId PK_FK
+    }
+
+    Users {
+        NVARCHAR50 Id PK
+        NVARCHAR100 Username UK
+        NVARCHAR500 PasswordHash
+        NVARCHAR200 Name
+        NVARCHAR200 Email UK
+        NVARCHAR50 Phone
+        NVARCHAR50 RoleId FK
+        NVARCHAR20 Status
+        NVARCHAR100 LastActive
+        DATETIME2 CreatedAt
+        DATETIME2 UpdatedAt
+    }
+
+    Categories {
+        NVARCHAR50 Id PK
+        NVARCHAR200 Name UK
+        NVARCHAR20 Color
+        NVARCHAR100 Icon
+        NVARCHAR1000 Description
+        DATETIME2 CreatedAt
+    }
+
+    Products {
+        NVARCHAR50 Id PK
+        NVARCHAR100 Sku UK
+        NVARCHAR500 Name
+        NVARCHAR2000 Description
+        NVARCHAR50 CategoryId FK
+        NVARCHAR200 Brand
+        NVARCHAR200 Supplier
+        BIT IsBoxed
+        INT Boxes
+        INT ItemsPerBox
+        INT ExtraPieces
+        DECIMAL18_2 PricePerBox
+        DECIMAL18_2 IndividualPrice
+        INT LowStockThreshold
+        NVARCHAR100 Barcode
+        NVARCHAR1000 Image
+        DATETIME2 CreatedAt
+        DATETIME2 UpdatedAt
+    }
+
+    Customers {
+        NVARCHAR50 Id PK
+        NVARCHAR500 Name
+        NVARCHAR50 Phone
+        NVARCHAR1000 Address
+        NVARCHAR2000 Notes
+        DATETIME2 CreatedAt
+        DATETIME2 UpdatedAt
+    }
+
+    Sales {
+        NVARCHAR50 Id PK
+        NVARCHAR50 Invoice UK
+        NVARCHAR50 CustomerId FK
+        NVARCHAR500 CustomerName
+        NVARCHAR200 CashierName
+        NVARCHAR50 UserId FK
+        DECIMAL18_2 Subtotal
+        DECIMAL18_2 Discount
+        DECIMAL18_2 Tax
+        DECIMAL18_2 Total
+        NVARCHAR50 Method
+        BIT OnCredit
+        DECIMAL18_2 AmountPaid
+        NVARCHAR2000 Notes
+        DATETIME2 SoldAt
+    }
+
+    SaleItems {
+        NVARCHAR50 Id PK
+        NVARCHAR50 SaleId FK
+        NVARCHAR50 ProductId FK
+        NVARCHAR500 ProductName
+        INT Quantity
+        DECIMAL18_2 UnitPrice
+        DECIMAL18_2 SubtotalComputed
+    }
+
+    LedgerEntries {
+        NVARCHAR50 Id PK
+        NVARCHAR50 CustomerId FK
+        NVARCHAR20 Kind
+        DECIMAL18_2 Amount
+        DECIMAL18_2 BalanceAfter
+        NVARCHAR50 Method
+        NVARCHAR500 Reference
+        NVARCHAR2000 Notes
+        NVARCHAR50 SaleId FK
+        NVARCHAR50 ExpectedPaymentDate
+        NVARCHAR2000 LineSummary
+        DATETIME2 EntryAt
+    }
+
+    ActivityLog {
+        NVARCHAR50 Id PK
+        NVARCHAR50 Kind
+        NVARCHAR500 Title
+        NVARCHAR2000 Description
+        NVARCHAR200 Actor
+        DATETIME2 OccurredAt
+    }
+
+    AuditLog {
+        NVARCHAR50 Id PK
+        NVARCHAR50 UserId FK
+        NVARCHAR200 UserName
+        NVARCHAR200 Action
+        NVARCHAR500 Target
+        NVARCHAR2000 Description
+        DATETIME2 OccurredAt
+    }
+
+    Settings {
+        NVARCHAR50 Id PK
+        NVARCHAR500 StoreName
+        NVARCHAR200 Email
+        NVARCHAR50 Phone
+        NVARCHAR10 Currency
+        NVARCHAR1000 Address
+        DECIMAL5_2 TaxRate
+        INT LowStockThreshold
+        NVARCHAR1000 ReceiptFooter
+        BIT BarcodeScanning
+        BIT LowStockAlerts
+        BIT TwoFactorAuth
+        BIT SessionTimeout
+        DATETIME2 UpdatedAt
+    }
+
+    InventoryMovements {
+        NVARCHAR50 Id PK
+        NVARCHAR50 ProductId FK
+        NVARCHAR50 MovementType
+        INT Quantity
+        INT Boxes
+        INT Pieces
+        NVARCHAR500 Reason
+        NVARCHAR2000 Notes
+        NVARCHAR50 UserId FK
+        NVARCHAR200 UserName
+        DATETIME2 OccurredAt
+    }
+
+    ImportHistory {
+        NVARCHAR50 Id PK
+        NVARCHAR500 FileName
+        NVARCHAR100 ImportType
+        INT RowCount
+        INT SuccessCount
+        INT ErrorCount
+        NVARCHARMAX Errors
+        NVARCHAR50 UserId
+        DATETIME2 ImportedAt
+    }
