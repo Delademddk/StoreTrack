@@ -15,7 +15,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
@@ -56,12 +56,45 @@ import {
 import { ProductFormModal, type ProductDraft } from "@/components/storetrack/product-form-modal";
 import { RestockModal, type RestockDraft } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
+import { csvToObjects, downloadCsv, readTextFile, type CsvRow } from "@/lib/data-transfer";
 
 export const Route = createFileRoute("/_authenticated/products/")({
   component: ProductsPage,
 });
 
 const dash = "—";
+
+const PRODUCT_HEADERS = [
+  "sku",
+  "name",
+  "category",
+  "brand",
+  "supplier",
+  "isBoxed",
+  "boxes",
+  "itemsPerBox",
+  "extraPieces",
+  "pricePerBox",
+  "individualPrice",
+  "lowStockThreshold",
+  "description",
+  "barcode",
+  "image",
+  "createdAt",
+  "updatedAt",
+];
+
+const REQUIRED_IMPORT_COLUMNS = [
+  "name",
+  "category",
+  "isBoxed",
+  "boxes",
+  "itemsPerBox",
+  "extraPieces",
+  "pricePerBox",
+  "individualPrice",
+  "lowStockThreshold",
+];
 
 const skuFrom = (name: string) => {
   const slug =
@@ -77,8 +110,86 @@ const skuFrom = (name: string) => {
 const placeholderImage = (name: string) =>
   `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(name || "product")}`;
 
+const productToRow = (p: Product): CsvRow => ({
+  sku: p.sku,
+  name: p.name,
+  category: p.category,
+  brand: p.brand,
+  supplier: p.supplier,
+  isBoxed: p.isBoxed,
+  boxes: p.boxes,
+  itemsPerBox: p.itemsPerBox,
+  extraPieces: p.extraPieces,
+  pricePerBox: p.pricePerBox,
+  individualPrice: p.individualPrice,
+  lowStockThreshold: p.lowStockThreshold,
+  description: p.description,
+  barcode: p.barcode,
+  image: p.image,
+  createdAt: p.createdAt,
+  updatedAt: p.updatedAt,
+});
+
+const readNumber = (row: Record<string, string>, key: string, line: number) => {
+  const value = Number(row[key]);
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`Line ${line}: ${key} must be a positive number or zero.`);
+  }
+  return value;
+};
+
+const readBoolean = (value: string) => {
+  const normalized = value.trim().toLowerCase();
+  if (["true", "yes", "1", "boxed"].includes(normalized)) return true;
+  if (["false", "no", "0", "individual"].includes(normalized)) return false;
+  throw new Error("isBoxed must be true or false.");
+};
+
+function productFromRow(row: Record<string, string>, line: number): Product {
+  const name = row.name?.trim();
+  if (!name) throw new Error(`Line ${line}: name is required.`);
+
+  const isBoxed = readBoolean(row.isBoxed ?? "");
+  const boxes = Math.floor(readNumber(row, "boxes", line));
+  const itemsPerBox = Math.floor(readNumber(row, "itemsPerBox", line));
+  const extraPieces = Math.floor(readNumber(row, "extraPieces", line));
+  const pricePerBox = readNumber(row, "pricePerBox", line);
+  const individualPrice = readNumber(row, "individualPrice", line);
+  const lowStockThreshold = Math.floor(readNumber(row, "lowStockThreshold", line));
+
+  if (isBoxed && itemsPerBox <= 0) {
+    throw new Error(`Line ${line}: boxed products need itemsPerBox greater than zero.`);
+  }
+  if (individualPrice <= 0) {
+    throw new Error(`Line ${line}: individualPrice must be greater than zero.`);
+  }
+
+  const now = new Date().toISOString();
+  return {
+    id: `p_${Date.now()}_${line}`,
+    sku: row.sku?.trim() || skuFrom(name),
+    name,
+    category: row.category?.trim() || "Uncategorized",
+    brand: row.brand?.trim() || "",
+    supplier: row.supplier?.trim() || "",
+    isBoxed,
+    boxes: isBoxed ? boxes : 0,
+    itemsPerBox: isBoxed ? itemsPerBox : 0,
+    extraPieces,
+    pricePerBox: isBoxed ? pricePerBox : 0,
+    individualPrice,
+    lowStockThreshold,
+    description: row.description?.trim() || "",
+    barcode: row.barcode?.trim() || undefined,
+    image: row.image?.trim() || placeholderImage(name),
+    createdAt: row.createdAt?.trim() || now,
+    updatedAt: row.updatedAt?.trim() || now,
+  };
+}
+
 function ProductsPage() {
   const navigate = useNavigate();
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<Product[]>(seedProducts);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("all");

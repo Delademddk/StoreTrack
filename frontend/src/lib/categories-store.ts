@@ -51,6 +51,13 @@ export const categoriesStore = {
     emit();
     return created;
   },
+  exportAll() {
+    return [...categories];
+  },
+  restoreAll(next: Category[]) {
+    categories = [...next];
+    emit();
+  },
 };
 
 export function useCategories(): Category[] {

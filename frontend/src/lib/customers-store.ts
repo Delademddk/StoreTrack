@@ -98,7 +98,7 @@ let customers: Customer[] = [
 ];
 
 let ledger: LedgerEntry[] = [];
-let customersSnapshot: Customer[] | undefined;
+let customersListSnapshot: Customer[] | undefined;
 const ledgerSnapshots = new Map<string, LedgerEntry[]>();
 const summarySnapshots = new Map<string, CustomerSummary>();
 
@@ -192,7 +192,7 @@ const notify = () => {
 };
 
 function invalidateSnapshots(customerId?: string) {
-  customersSnapshot = undefined;
+  customersListSnapshot = undefined;
   if (customerId) {
     ledgerSnapshots.delete(customerId);
     summarySnapshots.delete(customerId);
@@ -224,10 +224,10 @@ export function customerSummarySnapshot(customerId: string): CustomerSummary {
 // -------- Reads --------------------------------------------------------
 
 export function listCustomers(): Customer[] {
-  if (!customersSnapshot) {
-    customersSnapshot = [...customers].sort((a, b) => a.name.localeCompare(b.name));
+  if (!customersListSnapshot) {
+    customersListSnapshot = [...customers].sort((a, b) => a.name.localeCompare(b.name));
   }
-  return customersSnapshot;
+  return customersListSnapshot;
 }
 
 export function getCustomer(id: string): Customer | undefined {
@@ -402,6 +402,20 @@ export function recordPayment(customerId: string, draft: PaymentDraft): LedgerEn
   invalidateSnapshots(customerId);
   notify();
   return entry;
+}
+
+export function exportCustomerData() {
+  return {
+    customers: [...customers],
+    ledger: [...ledger],
+  };
+}
+
+export function restoreCustomerData(data: { customers: Customer[]; ledger: LedgerEntry[] }) {
+  customers = [...data.customers];
+  ledger = [...data.ledger];
+  invalidateSnapshots();
+  notify();
 }
 
 // -------- Aggregate helpers (dashboard / reports ready) ----------------
