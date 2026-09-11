@@ -1,17 +1,15 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Boxes, Building2, Package, Pencil, Tag, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { auditLog, products, sales, statusFor, totalQty } from "@/lib/mock-data";
+import { auditLog as defaultAuditLog, sales as defaultSales, statusFor, totalQty } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 
 export const Route = createFileRoute("/_authenticated/products/$id/")({
-  loader: ({ params }) => {
-    const product = products.find((p) => p.id === params.id);
-    if (!product) throw notFound();
-    return { product };
-  },
   component: ProductDetailPage,
   notFoundComponent: () => (
     <div className="py-24 text-center">
@@ -27,9 +25,33 @@ export const Route = createFileRoute("/_authenticated/products/$id/")({
 });
 
 function ProductDetailPage() {
-  const { product: p } = Route.useLoaderData();
-  const productSales = sales.filter((s) => s.items.some((i) => i.productId === p.id));
-  const productAudit = auditLog.filter((l) => l.target.includes(p.sku));
+  const { id } = Route.useParams();
+  const [product, setProduct] = useState<any>(null);
+  const [notFoundState, setNotFound] = useState(false);
+
+  useEffect(() => {
+    api.getProduct(id).then(setProduct).catch(() => setNotFound(true));
+  }, [id]);
+
+  const { data: salesData } = useFetch(() => api.getProductSales(id), [id]);
+  const { data: auditData } = useFetch(() => api.getProductAudit(id), [id]);
+
+  if (notFoundState) {
+    return (
+      <div className="py-24 text-center">
+        <p className="text-sm text-muted-foreground">Product not found.</p>
+        <Link to="/products" className="mt-4 inline-block text-sm font-medium text-brand hover:underline">
+          ← Back to products
+        </Link>
+      </div>
+    );
+  }
+
+  if (!product) return null;
+
+  const p = product;
+  const productSales = salesData || defaultSales.filter((s) => s.items.some((i: any) => i.productId === p.id));
+  const productAudit = auditData || defaultAuditLog.filter((l) => l.target.includes(p.sku));
 
   return (
     <>
@@ -129,8 +151,8 @@ function ProductDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {productSales.map((s) => {
-                    const item = s.items.find((i) => i.productId === p.id)!;
+                  {productSales.map((s: any) => {
+                    const item = s.items.find((i: any) => i.productId === p.id)!;
                     return (
                       <tr key={s.id}>
                         <td className="px-5 py-3 font-mono text-brand">{s.invoice}</td>
@@ -158,7 +180,7 @@ function ProductDetailPage() {
             <p className="text-xs text-muted-foreground">Full traceability</p>
           </div>
           <ol className="relative m-5 border-l border-border pl-6">
-            {(productAudit.length ? productAudit : auditLog.slice(0, 4)).map((a) => (
+            {(productAudit.length ? productAudit : defaultAuditLog.slice(0, 4)).map((a: any) => (
               <li key={a.id} className="mb-6 last:mb-0">
                 <span className="absolute -left-1.5 grid size-3 place-items-center rounded-full bg-brand ring-4 ring-background" />
                 <p className="text-sm font-semibold">{a.action}</p>

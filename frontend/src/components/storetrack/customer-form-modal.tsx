@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createCustomer, type Customer } from "@/lib/customers-store";
+import { api } from "@/lib/api";
 
 /**
  * Standalone "Add customer" dialog. Used from the Customers list and from
@@ -28,7 +28,7 @@ export function CustomerFormModal({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated?: (c: Customer) => void;
+  onCreated?: (c: any) => void;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -44,14 +44,18 @@ export function CustomerFormModal({
     }
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return toast.error("Full name is required");
     if (!phone.trim()) return toast.error("Phone number is required");
-    const c = createCustomer({ name, phone, address, notes });
-    toast.success(`${c.name} added`);
-    onCreated?.(c);
-    onOpenChange(false);
+    try {
+      const c = await api.createCustomer({ name, phone, address, notes });
+      toast.success(`${c.name} added`);
+      onCreated?.(c);
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create customer");
+    }
   };
 
   return (

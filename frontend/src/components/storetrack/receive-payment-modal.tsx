@@ -16,7 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { Customer, PaymentDraft } from "@/lib/customers-store";
+
+type PaymentDraft = {
+  amount: number;
+  method: "Cash" | "Card" | "Mobile Money";
+  reference?: string;
+  notes?: string;
+};
 
 const METHODS: PaymentDraft["method"][] = ["Cash", "Card", "Mobile Money"];
 
@@ -29,7 +35,7 @@ export function ReceivePaymentModal({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  customer: Customer | null;
+  customer: any | null;
   outstanding: number;
   onSubmit: (draft: PaymentDraft) => void;
 }) {

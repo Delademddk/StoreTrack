@@ -26,7 +26,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { suppliers, totalQty, type Product } from "@/lib/mock-data";
-import { categoriesStore, useCategories } from "@/lib/categories-store";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 
 const CREATE_CATEGORY_VALUE = "__create_new_category__";
 
@@ -64,7 +65,8 @@ export function ProductFormModal({
   initial?: Product | null;
   onSubmit: (draft: ProductDraft) => void;
 }) {
-  const categories = useCategories();
+  const { data: categoriesData } = useFetch(() => api.getCategories(), []);
+  const categories = categoriesData || [];
   const [form, setForm] = useState<ProductDraft>(() => emptyDraft(categories[0]?.name ?? ""));
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false);
 
@@ -93,9 +95,13 @@ export function ProductFormModal({
     set("category", value);
   };
 
-  const handleCategoryCreated = (name: string) => {
-    const created = categoriesStore.add(name);
-    if (created) set("category", created.name);
+  const handleCategoryCreated = async (name: string) => {
+    try {
+      const created = await api.createCategory({ name, color: "#6b7280", icon: "Package", description: "" });
+      if (created) set("category", created.name);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create category");
+    }
   };
 
   const validate = (): string | null => {
@@ -174,8 +180,8 @@ export function ProductFormModal({
                             </span>
                           </SelectItem>
                           <SelectSeparator />
-                          {categories.map((c) => (
-                            <SelectItem key={c.id} value={c.name}>
+                          {categories.map((c: any) => (
+                            <SelectItem key={c.id || c.name} value={c.name}>
                               {c.name}
                             </SelectItem>
                           ))}
@@ -412,7 +418,7 @@ export function ProductFormModal({
         <CreateCategoryModal
           open={createCategoryOpen}
           onOpenChange={setCreateCategoryOpen}
-          existing={categories.map((c) => c.name)}
+          existing={categories.map((c: any) => c.name)}
           onCreate={handleCategoryCreated}
         />
       </DialogContent>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpDown, Plus, Search, Users2 } from "lucide-react";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { EmptyState, PageHeader, moneyExact } from "@/components/storetrack/page-header";
 import { CustomerFormModal } from "@/components/storetrack/customer-form-modal";
@@ -14,12 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { cn } from "@/lib/utils";
-import {
-  customerSummary,
-  customersSnapshot,
-  subscribeCustomers,
-} from "@/lib/customers-store";
 
 export const Route = createFileRoute("/_authenticated/customers/")({
   component: CustomersPage,
@@ -39,11 +36,13 @@ function fmtDate(iso?: string) {
 }
 
 function useCustomers() {
-  return useSyncExternalStore(
-    (l) => subscribeCustomers(l),
-    () => customersSnapshot(),
-    () => customersSnapshot(),
-  );
+  const [customers, setCustomers] = useState<any[]>([]);
+  useEffect(() => {
+    api.getCustomers().then((data) => {
+      if (data?.items) setCustomers(data.items);
+    }).catch(() => {});
+  }, []);
+  return customers;
 }
 
 function CustomersPage() {
@@ -55,7 +54,7 @@ function CustomersPage() {
   const [addOpen, setAddOpen] = useState(false);
 
   const rows = useMemo(() => {
-    const enriched = customers.map((c) => ({ c, s: customerSummary(c.id) }));
+    const enriched = customers.map((c) => ({ c, s: c.outstanding !== undefined ? c : { outstanding: 0, status: "clear", totalPurchases: 0, totalPaid: 0, lastPurchaseAt: null, nextDueAt: null } }));
     const filtered = enriched.filter(({ c, s }) => {
       if (q && !`${c.name} ${c.phone}`.toLowerCase().includes(q.toLowerCase())) return false;
       if (filter === "clear" && s.status !== "clear") return false;
@@ -65,8 +64,8 @@ function CustomersPage() {
     });
     filtered.sort((a, b) => {
       if (sort === "name") return a.c.name.localeCompare(b.c.name);
-      if (sort === "outstanding") return b.s.outstanding - a.s.outstanding;
-      return (b.s.lastPurchaseAt ?? "").localeCompare(a.s.lastPurchaseAt ?? "");
+      if (sort === "outstanding") return (b.s.outstanding || 0) - (a.s.outstanding || 0);
+      return ((b.s.lastPurchaseAt ?? "") as string).localeCompare((a.s.lastPurchaseAt ?? "") as string);
     });
     return filtered;
   }, [customers, q, filter, sort]);

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { KeyRound, MoreHorizontal, Plus, Search, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/storetrack/page-header";
@@ -31,6 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { permissions, users as seedUsers } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/users")({
@@ -43,6 +45,12 @@ function UsersPage() {
   const [users, setUsers] = useState(seedUsers);
   const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
+
+  const { data: usersData } = useFetch(() => api.getUsers(), []);
+
+  useEffect(() => {
+    if (usersData?.items) setUsers(usersData.items);
+  }, [usersData]);
 
   const filtered = users.filter(
     (u) =>
@@ -102,9 +110,17 @@ function UsersPage() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => {
-                    setOpen(false);
-                    toast.success("Invite sent");
+                  onClick={async () => {
+                    try {
+                      await api.createUser({});
+                      setOpen(false);
+                      toast.success("User created");
+                      // Refresh users list
+                      const refreshed = await api.getUsers();
+                      if (refreshed?.items) setUsers(refreshed.items);
+                    } catch (err: any) {
+                      toast.error(err?.message || "Failed to create user");
+                    }
                   }}
                 >
                   Send invite
@@ -214,29 +230,41 @@ function UsersPage() {
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => {
-                          setUsers((all) =>
-                            all.map((x) =>
-                              x.id === u.id
-                                ? { ...x, status: x.status === "Active" ? "Disabled" : "Active" }
-                                : x,
-                            ),
-                          );
-                          toast.success(
-                            `${u.name} ${u.status === "Active" ? "disabled" : "enabled"}`,
-                          );
+                        onClick={async () => {
+                          const newStatus = u.status === "Active" ? "Disabled" : "Active";
+                          try {
+                            await api.updateUserStatus(u.id, { status: newStatus });
+                            setUsers((all) =>
+                              all.map((x) => (x.id === u.id ? { ...x, status: newStatus } : x)),
+                            );
+                            toast.success(`${u.name} ${newStatus === "Active" ? "enabled" : "disabled"}`);
+                          } catch (err: any) {
+                            toast.error(err?.message || "Failed to update user");
+                          }
                         }}
                       >
                         {u.status === "Active" ? "Disable" : "Enable"}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast.success("Password reset link sent")}>
+                      <DropdownMenuItem onClick={async () => {
+                        try {
+                          await api.resetUserPassword(u.id);
+                          toast.success("Password reset successfully");
+                        } catch (err: any) {
+                          toast.error(err?.message || "Failed to reset password");
+                        }
+                      }}>
                         <KeyRound className="mr-2 size-3.5" /> Reset password
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => {
-                          setUsers((all) => all.filter((x) => x.id !== u.id));
-                          toast.success("User removed");
+                        onClick={async () => {
+                          try {
+                            await api.deleteUser(u.id);
+                            setUsers((all) => all.filter((x) => x.id !== u.id));
+                            toast.success("User removed");
+                          } catch (err: any) {
+                            toast.error(err?.message || "Failed to delete user");
+                          }
                         }}
                       >
                         Delete

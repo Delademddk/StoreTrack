@@ -16,13 +16,29 @@ import { PageHeader, money } from "@/components/storetrack/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { auditLog, bestSellers, kpi, revenueSeries } from "@/lib/mock-data";
+import {
+  auditLog as defaultAuditLog,
+  bestSellers as defaultBestSellers,
+  kpi as defaultKpi,
+  revenueSeries as defaultRevenueSeries,
+} from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
 });
 
 function ReportsPage() {
+  const { data: metrics } = useFetch(() => api.getReportMetrics(), []);
+  const { data: revenueData } = useFetch(() => api.getRevenueTrend(30), []);
+  const { data: bestSellersData } = useFetch(() => api.getTopProducts(), []);
+  const { data: auditData } = useFetch(() => api.getAuditLog(), []);
+
+  const kpi = metrics || defaultKpi;
+  const revenueSeries = revenueData || defaultRevenueSeries;
+  const bestSellers = bestSellersData || defaultBestSellers;
+  const auditLog = auditData || defaultAuditLog;
   return (
     <>
       <PageHeader
@@ -44,7 +60,7 @@ function ReportsPage() {
       />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Metric label="Daily sales" value={money(kpi.todaySales)} tone="brand" />
+        <Metric label="Daily sales" value={money(kpi.dailySales ?? kpi.todaySales)} tone="brand" />
         <Metric label="Weekly revenue" value={money(kpi.weeklyRevenue)} tone="success" />
         <Metric label="Monthly revenue" value={money(kpi.weeklyRevenue * 4.1)} tone="primary" />
         <Metric label="Inventory value" value={money(kpi.inventoryValue)} tone="warning" />
@@ -149,7 +165,7 @@ function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {auditLog.map((l) => (
+                {auditLog.map((l: any) => (
                   <tr key={l.id} className="hover:bg-muted/30">
                     <td className="px-5 py-3 font-mono text-[11px] text-muted-foreground">
                       {l.at}

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { activity } from "@/lib/mock-data";
+import { activity as defaultActivity } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -17,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { data: activityData } = useFetch(() => api.getActivity(), []);
+  const activity = activityData || defaultActivity;
 
   return (
     <>
@@ -76,7 +80,14 @@ function ProfilePage() {
             </div>
           </div>
           <div className="mt-6 flex justify-end">
-            <Button onClick={() => toast.success("Profile updated")}>Save changes</Button>
+            <Button onClick={async () => {
+              try {
+                await api.updateMe({});
+                toast.success("Profile updated");
+              } catch (err: any) {
+                toast.error(err?.message || "Failed to update profile");
+              }
+            }}>Save changes</Button>
           </div>
         </Card>
 
@@ -95,7 +106,7 @@ function ProfilePage() {
               <p className="text-sm font-semibold">Recent activity</p>
             </div>
             <ul className="divide-y divide-border">
-              {activity.slice(0, 5).map((a) => (
+              {activity.slice(0, 5).map((a: any) => (
                 <li key={a.id} className="p-4">
                   <p className="text-xs font-semibold">{a.title}</p>
                   <p className="text-[11px] text-muted-foreground">{a.at}</p>

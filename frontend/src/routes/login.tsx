@@ -16,8 +16,8 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { login, isAuthenticated, hydrated } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("alex");
-  const [password, setPassword] = useState("demo1234");
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("Admin123");
   const [remember, setRemember] = useState(true);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,8 @@ function LoginPage() {
       await login(username.trim(), password, remember);
       toast.success(`Welcome back, ${username}`);
       navigate({ to: "/dashboard" });
+    } catch (err: any) {
+      toast.error(err?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,7 @@ function LoginPage() {
                 autoFocus
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="alex"
+                placeholder="admin"
                 className="h-11"
               />
             </div>

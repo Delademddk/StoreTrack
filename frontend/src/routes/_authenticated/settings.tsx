@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CloudDownload, CloudUpload, Palette, Shield, Store } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/storetrack/page-header";
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +21,9 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { data: settings } = useFetch(() => api.getSettings(), []);
+  const store = settings?.store || {};
+  const inv = settings?.inventory || {};
 
   return (
     <>
@@ -44,18 +50,25 @@ function SettingsPage() {
         <TabsContent value="store" className="mt-6">
           <Card className="rounded-2xl border-border p-6 shadow-[var(--shadow-card)]">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Store name" defaultValue="Northside Hub — Main Depot" />
-              <Field label="Email" type="email" defaultValue="ops@storetrack.io" />
-              <Field label="Phone" defaultValue="+254 700 000 000" />
-              <Field label="Currency" defaultValue="USD" />
+              <Field label="Store name" defaultValue={store.storeName || "StoreTrack Demo Store"} />
+              <Field label="Email" type="email" defaultValue={store.email || "admin@storetrack.com"} />
+              <Field label="Phone" defaultValue={store.phone || "+1 555 0123"} />
+              <Field label="Currency" defaultValue={store.currency || "USD"} />
               <Field
                 label="Address"
                 className="md:col-span-2"
-                defaultValue="42 Riverside Drive, Nairobi 00100"
+                defaultValue={store.address || "123 Main Street, Nairobi, Kenya"}
               />
             </div>
             <div className="mt-6 flex justify-end">
-              <Button onClick={() => toast.success("Store settings saved")}>Save changes</Button>
+              <Button onClick={async () => {
+                try {
+                  await api.updateStoreSettings(store);
+                  toast.success("Store settings saved");
+                } catch (err: any) {
+                  toast.error(err?.message || "Failed to save");
+                }
+              }}>Save changes</Button>
             </div>
           </Card>
         </TabsContent>
@@ -63,12 +76,12 @@ function SettingsPage() {
         <TabsContent value="inventory" className="mt-6">
           <Card className="rounded-2xl border-border p-6 shadow-[var(--shadow-card)]">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Default low stock threshold" type="number" defaultValue="10" />
-              <Field label="Tax rate (%)" type="number" defaultValue="8.5" />
+              <Field label="Default low stock threshold" type="number" defaultValue={String(inv.defaultLowStockThreshold || 10)} />
+              <Field label="Tax rate (%)" type="number" defaultValue={String(inv.taxRate || 16)} />
               <Field
                 label="Receipt footer"
                 className="md:col-span-2"
-                defaultValue="Thank you for shopping with us!"
+                defaultValue={inv.receiptFooter || "Thank you for shopping with us!"}
               />
               <SwitchRow
                 label="Enable barcode scanning"
@@ -126,7 +139,14 @@ function SettingsPage() {
                 <Field label="New password" type="password" />
               </div>
               <div className="flex justify-end">
-                <Button onClick={() => toast.success("Password updated")}>Update password</Button>
+                <Button onClick={async () => {
+                  try {
+                    await api.changePassword({ currentPassword: "", newPassword: "" });
+                    toast.success("Password updated");
+                  } catch (err: any) {
+                    toast.error(err?.message || "Failed to update password");
+                  }
+                }}>Update password</Button>
               </div>
             </div>
           </Card>

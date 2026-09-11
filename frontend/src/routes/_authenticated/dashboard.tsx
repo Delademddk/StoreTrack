@@ -32,14 +32,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  activity,
-  bestSellers,
-  categoryBreakdown,
-  kpi,
-  products,
-  revenueSeries,
+  kpi as defaultKpi,
+  revenueSeries as defaultRevenue,
+  products as defaultProducts,
+  activity as defaultActivity,
+  bestSellers as defaultBestSellers,
+  categoryBreakdown as defaultCategoryBreakdown,
   statusFor,
 } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -113,6 +115,21 @@ const CHART_COLORS = [
 function DashboardPage() {
   const { user } = useAuth();
   const [range, setRange] = useState("month");
+
+  const { data: kpiData } = useFetch(() => api.getKPIs(), []);
+  const { data: revenueData } = useFetch(() => api.getRevenue(), []);
+  const { data: activityData } = useFetch(() => api.getActivity(), []);
+  const { data: bestSellersData } = useFetch(() => api.getBestSellers(), []);
+  const { data: categoryData } = useFetch(() => api.getCategoryBreakdown(), []);
+  const { data: productsData } = useFetch(() => api.getProducts({ status: "low_stock", pageSize: "5" }), []);
+
+  const kpi = kpiData || defaultKpi;
+  const revenueSeries = revenueData || defaultRevenue;
+  const activityItems = activityData || defaultActivity;
+  const bestSellersItems = bestSellersData || defaultBestSellers;
+  const categoryItems = categoryData || defaultCategoryBreakdown;
+  const lowStockProducts = (productsData?.items || []).slice(0, 5);
+
   const trimmed =
     range === "week"
       ? revenueSeries.slice(-7)
@@ -121,7 +138,6 @@ function DashboardPage() {
         : range === "year"
           ? revenueSeries
           : revenueSeries.slice(-30);
-  const lowStockProducts = products.filter((p) => statusFor(p) !== "in_stock").slice(0, 5);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -272,7 +288,7 @@ function DashboardPage() {
             <span className="text-[11px] font-medium text-muted-foreground">Last 24h</span>
           </div>
           <ul className="divide-y divide-border">
-            {activity.map((a) => (
+                  {activityItems.map((a: any) => (
               <li key={a.id} className="flex gap-3 p-4 transition-colors hover:bg-muted/40">
                 <span
                   className={cn(
@@ -310,7 +326,7 @@ function DashboardPage() {
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={bestSellers}
+                data={bestSellersItems}
                 layout="vertical"
                 margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
               >
@@ -351,13 +367,13 @@ function DashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryBreakdown}
+                  data={categoryItems}
                   dataKey="value"
                   innerRadius={55}
                   outerRadius={85}
                   paddingAngle={2}
                 >
-                  {categoryBreakdown.map((_, i) => (
+                  {categoryItems.map((_: any, i: number) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Pie>
@@ -374,7 +390,7 @@ function DashboardPage() {
             </ResponsiveContainer>
           </div>
           <ul className="mt-2 space-y-1.5 text-xs">
-            {categoryBreakdown.map((c, i) => (
+            {categoryItems.map((c: any, i: number) => (
               <li key={c.name} className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <span
@@ -415,7 +431,7 @@ function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {lowStockProducts.map((p) => {
+              {lowStockProducts.map((p: any) => {
                 const qty = p.boxes * p.itemsPerBox + p.extraPieces;
                 const burn = 1.2 + Math.random() * 1.4;
                 const days = Math.max(1, Math.round(qty / burn));

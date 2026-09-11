@@ -15,7 +15,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
@@ -47,12 +47,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  categories,
+  categories as defaultCategories,
   products as seedProducts,
   statusFor,
   totalQty,
   type Product,
 } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { ProductFormModal, type ProductDraft } from "@/components/storetrack/product-form-modal";
 import { RestockModal, type RestockDraft } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
@@ -190,11 +192,19 @@ function productFromRow(row: Record<string, string>, line: number): Product {
 function ProductsPage() {
   const navigate = useNavigate();
   const importInputRef = useRef<HTMLInputElement>(null);
-  const [items, setItems] = useState<Product[]>(seedProducts);
+  const [items, setItems] = useState<Product[]>([]);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
   const [view, setView] = useState<"list" | "grid">("list");
+  const { data: categoriesData } = useFetch(() => api.getCategories(), []);
+  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+
+  const { data: productsData, refetch } = useFetch(() => api.getProducts(), []);
+
+  useEffect(() => {
+    if (productsData?.items) setItems(productsData.items);
+  }, [productsData]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -222,77 +232,56 @@ function ProductsPage() {
     setModalOpen(true);
   };
 
-  const handleSubmit = (draft: ProductDraft) => {
-    if (editing) {
-      setItems((list) =>
-        list.map((p) =>
-          p.id === editing.id
-            ? {
-                ...p,
-                ...draft,
-                image: draft.image || p.image,
-                updatedAt: new Date().toISOString(),
-              }
-            : p,
-        ),
-      );
-      toast.success("Product updated");
-    } else {
-      const now = new Date().toISOString();
-      const newProduct: Product = {
-        ...draft,
-        id: `p_${Date.now()}`,
-        sku: skuFrom(draft.name),
-        image: draft.image || placeholderImage(draft.name),
-        createdAt: now,
-        updatedAt: now,
-      };
-      setItems((list) => [newProduct, ...list]);
-      toast.success("Product added");
+  const handleSubmit = async (draft: ProductDraft) => {
+    try {
+      if (editing) {
+        const updated = await api.updateProduct(editing.id, draft);
+        setItems((list) => list.map((p) => (p.id === editing.id ? updated : p)));
+        toast.success("Product updated");
+      } else {
+        const created = await api.createProduct(draft);
+        setItems((list) => [created, ...list]);
+        toast.success("Product added");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save product");
     }
   };
 
-  const handleDuplicate = (p: Product) => {
-    const now = new Date().toISOString();
-    const copy: Product = {
-      ...p,
-      id: `p_${Date.now()}`,
-      name: `${p.name} (Copy)`,
-      sku: skuFrom(p.name),
-      createdAt: now,
-      updatedAt: now,
-    };
-    setItems((list) => [copy, ...list]);
-    toast.success("Product duplicated");
+  const handleDuplicate = async (p: Product) => {
+    try {
+      const copy = await api.duplicateProduct(p.id);
+      setItems((list) => [copy, ...list]);
+      toast.success("Product duplicated");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to duplicate");
+    }
   };
 
-  const handleDelete = (p: Product) => {
-    setItems((list) => list.filter((x) => x.id !== p.id));
-    toast.success(`${p.name} deleted`);
+  const handleDelete = async (p: Product) => {
+    try {
+      await api.deleteProduct(p.id);
+      setItems((list) => list.filter((x) => x.id !== p.id));
+      toast.success(`${p.name} deleted`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete");
+    }
   };
 
-  const handleRestock = (product: Product, draft: RestockDraft) => {
-    setItems((list) =>
-      list.map((p) =>
-        p.id === product.id
-          ? {
-              ...p,
-              boxes: p.isBoxed ? p.boxes + draft.addBoxes : p.boxes,
-              extraPieces: p.extraPieces + draft.addPieces,
-              updatedAt: new Date().toISOString(),
-            }
-          : p,
-      ),
-    );
-    // Structured for a future audit log: draft.reason / draft.notes /
-    // draft.addBoxes / draft.addPieces are all preserved on the payload.
-    const parts = [
-      draft.addBoxes > 0 ? `${draft.addBoxes} box${draft.addBoxes === 1 ? "" : "es"}` : null,
-      draft.addPieces > 0 ? `${draft.addPieces} loose` : null,
-    ].filter(Boolean);
-    toast.success(`Restocked ${product.name}`, {
-      description: `${parts.join(" · ")} · ${draft.reason}`,
-    });
+  const handleRestock = async (product: Product, draft: RestockDraft) => {
+    try {
+      const updated = await api.restockProduct(product.id, draft);
+      setItems((list) => list.map((p) => (p.id === product.id ? updated : p)));
+      const parts = [
+        draft.addBoxes > 0 ? `${draft.addBoxes} box${draft.addBoxes === 1 ? "" : "es"}` : null,
+        draft.addPieces > 0 ? `${draft.addPieces} loose` : null,
+      ].filter(Boolean);
+      toast.success(`Restocked ${product.name}`, {
+        description: `${parts.join(" · ")} · ${draft.reason}`,
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to restock");
+    }
   };
 
   return (
@@ -332,7 +321,7 @@ function ProductsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All categories</SelectItem>
-              {categories.map((c) => (
+              {categories.map((c: string) => (
                 <SelectItem key={c} value={c}>
                   {c}
                 </SelectItem>

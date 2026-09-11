@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "@/lib/api";
 
 export interface AuthUser {
   id: string;
@@ -8,6 +9,7 @@ export interface AuthUser {
   role: "Admin" | "Manager" | "Cashier" | "Keeper";
   avatarInitials: string;
   storeName: string;
+  _token?: string;
 }
 
 interface AuthContextValue {
@@ -22,41 +24,31 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "storetrack-session";
 
-const DEMO_USER: AuthUser = {
-  id: "usr_01",
-  name: "Alex Rivera",
-  username: "alex",
-  email: "alex@storetrack.io",
-  role: "Admin",
-  avatarInitials: "AR",
-  storeName: "Northside Hub — Main Depot",
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw) as AuthUser);
+      const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed._token) {
+          setUser(parsed);
+        }
+      }
     } catch {
       /* ignore */
     }
     setHydrated(true);
   }, []);
 
-  const login = async (username: string, _password: string, remember: boolean) => {
-    // Frontend-only mock — accept anything, remember decides storage.
-    await new Promise((r) => setTimeout(r, 450));
-    const next: AuthUser = {
-      ...DEMO_USER,
-      username: username || DEMO_USER.username,
-      avatarInitials: (username || "AR").slice(0, 2).toUpperCase(),
-    };
-    setUser(next);
+  const login = async (username: string, password: string, remember: boolean) => {
+    const res = await api.login(username, password);
+    const authUser: AuthUser = { ...res.user, _token: res.token };
+    setUser(authUser);
     const store = remember ? localStorage : sessionStorage;
-    store.setItem(STORAGE_KEY, JSON.stringify(next));
+    store.setItem(STORAGE_KEY, JSON.stringify(authUser));
     if (!remember) localStorage.removeItem(STORAGE_KEY);
   };
 

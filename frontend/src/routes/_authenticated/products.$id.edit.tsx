@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/storetrack/page-header";
@@ -16,14 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categories, products, suppliers } from "@/lib/mock-data";
+import { categories as defaultCategories, suppliers } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 
 export const Route = createFileRoute("/_authenticated/products/$id/edit")({
-  loader: ({ params }) => {
-    const product = products.find((p) => p.id === params.id);
-    if (!product) throw notFound();
-    return { product };
-  },
   component: EditProductPage,
   notFoundComponent: () => (
     <div className="py-24 text-center">
@@ -33,11 +30,33 @@ export const Route = createFileRoute("/_authenticated/products/$id/edit")({
 });
 
 function EditProductPage() {
-  const { product } = Route.useLoaderData();
+  const { id } = Route.useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState<typeof product>(product);
-  const set = <K extends keyof typeof product>(k: K, v: (typeof product)[K]) =>
-    setForm((s: typeof product) => ({ ...s, [k]: v }));
+  const [product, setProduct] = useState<any>(null);
+  const [form, setForm] = useState<any>(null);
+  const [notFoundState, setNotFound] = useState(false);
+
+  const { data: categoriesData } = useFetch(() => api.getCategories(), []);
+  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+
+  useEffect(() => {
+    api.getProduct(id).then((p) => {
+      setProduct(p);
+      setForm(p);
+    }).catch(() => setNotFound(true));
+  }, [id]);
+
+  if (notFoundState) {
+    return (
+      <div className="py-24 text-center">
+        <p className="text-sm text-muted-foreground">Product not found.</p>
+      </div>
+    );
+  }
+
+  if (!product || !form) return null;
+  const set = (k: string, v: any) =>
+    setForm((s: any) => ({ ...s, [k]: v }));
 
   return (
     <>
@@ -53,10 +72,15 @@ function EditProductPage() {
         }
       />
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          toast.success("Product updated");
-          navigate({ to: "/products/$id", params: { id: product.id } });
+          try {
+            await api.updateProduct(product.id, form);
+            toast.success("Product updated");
+            navigate({ to: "/products/$id", params: { id: product.id } });
+          } catch (err: any) {
+            toast.error(err?.message || "Failed to update product");
+          }
         }}
         className="space-y-6"
       >
@@ -77,7 +101,7 @@ function EditProductPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
+                  {categories.map((c: any) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
@@ -151,9 +175,14 @@ function EditProductPage() {
             type="button"
             variant="ghost"
             className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => {
-              toast.success("Product deleted");
-              navigate({ to: "/products" });
+            onClick={async () => {
+              try {
+                await api.deleteProduct(product.id);
+                toast.success("Product deleted");
+                navigate({ to: "/products" });
+              } catch (err: any) {
+                toast.error(err?.message || "Failed to delete product");
+              }
             }}
           >
             <Trash2 className="size-4" /> Delete product

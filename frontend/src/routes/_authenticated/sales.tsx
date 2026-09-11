@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Minus, Package, Plus, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
@@ -16,8 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { categories, products, statusFor, totalQty, type Product } from "@/lib/mock-data";
-import { getCustomer, recordCreditSale } from "@/lib/customers-store";
+import { categories as defaultCategories, products as defaultProducts, statusFor, totalQty, type Product } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -54,6 +55,16 @@ function SalesPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const { data: categoriesData } = useFetch(() => api.getCategories(), []);
+  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+
+  const { data: productsData } = useFetch(() => api.getProducts(), []);
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
+
+  useEffect(() => {
+    if (productsData?.items) setProducts(productsData.items);
+  }, [productsData]);
 
   const filtered = products.filter(
     (p) =>
@@ -123,38 +134,41 @@ function SalesPage() {
     setCheckoutOpen(true);
   };
 
-  const handleConfirmCheckout = (p: CheckoutConfirmPayload) => {
-    // NOTE: inventory decrement + full audit log wiring will land with the persistence layer.
-    if (p.onCredit && p.customerId) {
-      recordCreditSale({
-        customerId: p.customerId,
+  const handleConfirmCheckout = async (p: CheckoutConfirmPayload) => {
+    try {
+      const saleItems = cart.map((i) => ({
+        productId: i.id,
+        name: i.name,
+        qty: i.boxQty * i.itemsPerBox + i.pieceQty,
+        unitPrice: i.boxQty > 0 ? i.pricePerBox / i.itemsPerBox : i.individualPrice,
+      }));
+      await api.createSale({
+        items: saleItems,
+        subtotal: total,
+        discount,
+        tax: 0,
         total,
-        amountPaid: p.amountPaid ?? 0,
         method: p.method,
+        onCredit: p.onCredit || false,
+        customerId: p.customerId,
+        amountPaid: p.amountPaid,
         expectedPaymentDate: p.expectedPaymentDate,
         notes: p.notes,
-        lines: cart.map((i) => ({
-          productId: i.id,
-          name: i.name,
-          boxQty: i.boxQty,
-          pieceQty: i.pieceQty,
-          pricePerBox: i.pricePerBox,
-          individualPrice: i.individualPrice,
-        })),
       });
-      const customer = getCustomer(p.customerId);
-      const outstanding = Math.max(0, total - (p.amountPaid ?? 0));
-      toast.success(
-        outstanding > 0
-          ? `Credit sale saved — ${customer?.name} owes ${moneyExact(outstanding)}`
-          : `Sale settled — ${customer?.name}`,
-      );
-    } else {
-      toast.success(`Sale complete — ${moneyExact(total)} via ${p.method}`);
+      if (p.onCredit) {
+        toast.success(`Credit sale recorded`);
+      } else {
+        toast.success(`Sale complete — ${moneyExact(total)} via ${p.method}`);
+      }
+      setCheckoutOpen(false);
+      setCart([]);
+      setDiscount(0);
+      // Refresh products to get updated stock
+      const refreshed = await api.getProducts();
+      if (refreshed?.items) setProducts(refreshed.items);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to record sale");
     }
-    setCheckoutOpen(false);
-    setCart([]);
-    setDiscount(0);
   };
 
   return (
@@ -184,7 +198,7 @@ function SalesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All categories</SelectItem>
-                  {categories.map((c) => (
+                  {categories.map((c: string) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>

@@ -26,13 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import {
-  customerSummary,
-  customersSnapshot,
-  subscribeCustomers,
-  type Customer,
-} from "@/lib/customers-store";
-import { useSyncExternalStore } from "react";
+import { api } from "@/lib/api";
 
 type Method = "Cash" | "Card" | "Mobile Money";
 const METHODS: Method[] = ["Cash", "Card", "Mobile Money"];
@@ -47,11 +41,13 @@ export interface CheckoutConfirmPayload {
 }
 
 function useCustomers() {
-  return useSyncExternalStore(
-    (l) => subscribeCustomers(l),
-    () => customersSnapshot(),
-    () => customersSnapshot(),
-  );
+  const [customers, setCustomers] = useState<any[]>([]);
+  useEffect(() => {
+    api.getCustomers().then((data) => {
+      if (data?.items) setCustomers(data.items);
+    }).catch(() => {});
+  }, []);
+  return customers;
 }
 
 export function CheckoutModal({
@@ -222,7 +218,7 @@ export function CheckoutModal({
                     ) : (
                       <ul className="divide-y divide-border">
                         {filtered.map((c) => {
-                          const s = customerSummary(c.id);
+                          const outstanding = c.outstanding || 0;
                           return (
                             <li key={c.id}>
                               <button
@@ -236,9 +232,9 @@ export function CheckoutModal({
                                     {c.phone}
                                   </p>
                                 </div>
-                                {s.outstanding > 0 && (
+                                {outstanding > 0 && (
                                   <span className="whitespace-nowrap font-mono text-[10px] text-warning">
-                                    {moneyExact(s.outstanding)} due
+                                    {moneyExact(outstanding)} due
                                   </span>
                                 )}
                               </button>

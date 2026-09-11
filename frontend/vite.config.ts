@@ -42,7 +42,7 @@ export default defineConfig(({ command, mode }) => {
     },
     server: {
       host: "::",
-      port: 8080,
+      port: 5173,
     },
     optimizeDeps: {
       include: [

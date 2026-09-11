@@ -16,7 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categories, suppliers, statusFor, totalQty, type Product } from "@/lib/mock-data";
+import { categories as defaultCategories, suppliers, statusFor, totalQty, type Product } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 
 export const Route = createFileRoute("/_authenticated/products/new")({
   component: NewProductPage,
@@ -24,6 +26,8 @@ export const Route = createFileRoute("/_authenticated/products/new")({
 
 function NewProductPage() {
   const navigate = useNavigate();
+  const { data: categoriesData } = useFetch(() => api.getCategories(), []);
+  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
   const [form, setForm] = useState({
     name: "",
     category: categories[0],
@@ -50,11 +54,31 @@ function NewProductPage() {
     updatedAt: "",
   } as unknown as Product);
 
-  const onSave = (e: React.FormEvent) => {
+  const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("Product name is required");
-    toast.success("Product saved");
-    navigate({ to: "/products" });
+    try {
+      const product = await api.createProduct({
+        name: form.name,
+        category: form.category,
+        brand: form.brand,
+        supplier: form.supplier,
+        isBoxed: form.boxes > 0 || form.itemsPerBox > 1,
+        boxes: form.boxes,
+        itemsPerBox: form.itemsPerBox,
+        extraPieces: form.extraPieces,
+        pricePerBox: form.pricePerBox,
+        individualPrice: form.individualPrice,
+        lowStockThreshold: form.lowStockThreshold,
+        description: form.description,
+        barcode: form.barcode,
+        image: form.image,
+      });
+      toast.success("Product saved");
+      navigate({ to: "/products" });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create product");
+    }
   };
 
   return (
@@ -92,7 +116,7 @@ function NewProductPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((c) => (
+                    {categories.map((c: any) => (
                       <SelectItem key={c} value={c}>
                         {c}
                       </SelectItem>

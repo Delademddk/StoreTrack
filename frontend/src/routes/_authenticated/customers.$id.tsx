@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, HandCoins, ShoppingBag, Wallet } from "lucide-react";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, moneyExact } from "@/components/storetrack/page-header";
@@ -8,14 +8,8 @@ import { ReceivePaymentModal } from "@/components/storetrack/receive-payment-mod
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import {
-  customerSummarySnapshot,
-  getCustomer,
-  ledgerSnapshot,
-  recordPayment,
-  subscribeCustomers,
-  type LedgerEntry,
-} from "@/lib/customers-store";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
 
 export const Route = createFileRoute("/_authenticated/customers/$id")({
   component: CustomerDetailPage,
@@ -42,22 +36,51 @@ function fmtDate(iso: string) {
   });
 }
 
-function useSnapshot<T>(read: () => T): T {
-  return useSyncExternalStore((l) => subscribeCustomers(l), read, read);
+interface LedgerEntry {
+  id: string;
+  customerId: string;
+  kind: "purchase" | "payment";
+  at: string;
+  amount: number;
+  balanceAfter: number;
+  method: string | null;
+  reference: string | null;
+  notes: string | null;
+  saleId: string | null;
+  expectedPaymentDate: string | null;
+  lineSummary: string | null;
 }
 
 function CustomerDetailPage() {
   const { id } = Route.useParams();
-  const customer = useSnapshot(() => getCustomer(id));
-  const ledger = useSnapshot(() => ledgerSnapshot(id));
-  const summary = useSnapshot(() => customerSummarySnapshot(id));
+  const [customer, setCustomer] = useState<any>(null);
+  const [notFoundState, setNotFound] = useState(false);
+
+  const { data: ledger } = useFetch(() => api.getCustomerLedger(id), [id]);
+  const { data: summary } = useFetch(() => api.getCustomerSummary(id), [id]);
+
+  useEffect(() => {
+    api.getCustomer(id).then(setCustomer).catch(() => setNotFound(true));
+  }, [id]);
+
   const [payOpen, setPayOpen] = useState(false);
 
-  if (!customer) {
-    throw notFound();
+  if (notFoundState) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
+        <h2 className="text-lg font-semibold">Customer not found</h2>
+        <p className="mt-1 text-sm text-muted-foreground">This customer may have been removed.</p>
+        <Button asChild className="mt-4 rounded-xl">
+          <Link to="/customers">Back to customers</Link>
+        </Button>
+      </div>
+    );
   }
 
-  const history = useMemo(() => [...ledger].reverse(), [ledger]);
+  if (!customer) return null;
+
+  const history = [...(ledger || [])].reverse();
+  const financialSummary = summary || { totalPurchases: 0, totalPaid: 0, outstanding: 0, lastPurchaseAt: null, lastActivityAt: null, nextDueAt: null, status: "clear" };
 
   return (
     <>
@@ -77,7 +100,7 @@ function CustomerDetailPage() {
           <Button
             className="gap-2 rounded-xl"
             onClick={() => setPayOpen(true)}
-            disabled={summary.outstanding <= 0}
+            disabled={financialSummary.outstanding <= 0}
           >
             <HandCoins className="size-4" /> Receive payment
           </Button>
@@ -107,25 +130,25 @@ function CustomerDetailPage() {
               <StatTile
                 icon={<ShoppingBag className="size-4" />}
                 label="Total purchases"
-                value={moneyExact(summary.totalPurchases)}
+                value={moneyExact(financialSummary.totalPurchases)}
               />
               <StatTile
                 icon={<Wallet className="size-4" />}
                 label="Total paid"
-                value={moneyExact(summary.totalPaid)}
+                value={moneyExact(financialSummary.totalPaid)}
                 tone="success"
               />
               <StatTile
                 icon={<HandCoins className="size-4" />}
                 label="Outstanding balance"
-                value={moneyExact(summary.outstanding)}
-                tone={summary.outstanding > 0 ? "warning" : "default"}
+                value={moneyExact(financialSummary.outstanding)}
+                tone={financialSummary.outstanding > 0 ? "warning" : "default"}
               />
               <div className="rounded-xl bg-muted/40 px-3 py-2 text-[12px] text-muted-foreground">
                 <span className="font-semibold text-foreground">Last purchase:</span>{" "}
-                {summary.lastPurchaseAt ? fmtDate(summary.lastPurchaseAt) : "—"}
+                {financialSummary.lastPurchaseAt ? fmtDate(financialSummary.lastPurchaseAt) : "—"}
               </div>
-              {summary.nextDueAt && summary.outstanding > 0 && (
+              {financialSummary.nextDueAt && financialSummary.outstanding > 0 && (
                 <div className="rounded-xl bg-warning/10 px-3 py-2 text-[12px] text-warning">
                   <span className="font-semibold">Next payment due:</span>{" "}
                   {fmtDate(summary.nextDueAt)}
@@ -162,10 +185,17 @@ function CustomerDetailPage() {
         open={payOpen}
         onOpenChange={setPayOpen}
         customer={customer}
-        outstanding={summary.outstanding}
-        onSubmit={(draft) => {
-          recordPayment(customer.id, draft);
-          toast.success(`Payment of ${moneyExact(draft.amount)} recorded`);
+        outstanding={financialSummary.outstanding}
+        onSubmit={async (draft) => {
+          try {
+            await api.recordPayment(customer.id, draft);
+            toast.success(`Payment of ${moneyExact(draft.amount)} recorded`);
+            // Refresh data
+            const updatedLedger = await api.getCustomerLedger(id);
+            const updatedSummary = await api.getCustomerSummary(id);
+          } catch (err: any) {
+            toast.error(err?.message || "Failed to record payment");
+          }
         }}
       />
     </>
