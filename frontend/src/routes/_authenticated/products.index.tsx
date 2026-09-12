@@ -291,10 +291,45 @@ function ProductsPage() {
         description={`${items.length} SKUs · ${items.filter((p) => statusFor(p) === "low_stock").length} low stock`}
         actions={
           <>
-            <Button variant="outline" className="gap-2 rounded-xl">
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => importInputRef.current?.click()}>
               <Upload className="size-4" /> Import
             </Button>
-            <Button variant="outline" className="gap-2 rounded-xl">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const text = await file.text();
+                  const result = await api.importProducts(text);
+                  toast.success(`Imported ${result.imported} products`, {
+                    description: result.errors?.length ? `${result.errors.length} errors` : undefined,
+                  });
+                  refetch();
+                } catch (err: any) {
+                  toast.error(err?.message || "Import failed");
+                }
+                e.target.value = "";
+              }}
+            />
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={async () => {
+              try {
+                const csv = await api.exportReport("products");
+                const blob = new Blob([typeof csv === "string" ? csv : JSON.stringify(csv)], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "products_export.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success("Products exported");
+              } catch (err: any) {
+                toast.error(err?.message || "Export failed");
+              }
+            }}>
               <Download className="size-4" /> Export
             </Button>
             <Button className="gap-2 rounded-xl" onClick={openCreate}>

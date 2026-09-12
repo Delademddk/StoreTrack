@@ -12,6 +12,9 @@ import {
   YAxis,
 } from "recharts";
 
+import { useState } from "react";
+import { toast } from "sonner";
+
 import { PageHeader, money } from "@/components/storetrack/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,6 +42,31 @@ function ReportsPage() {
   const revenueSeries = revenueData || defaultRevenueSeries;
   const bestSellers = bestSellersData || defaultBestSellers;
   const auditLog = auditData || defaultAuditLog;
+
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async (format: string) => {
+    try {
+      if (format === "csv") {
+        const csv = await api.exportReport("csv");
+        downloadFile(typeof csv === "string" ? csv : JSON.stringify(csv), "audit_report.csv", "text/csv");
+        toast.success("Audit report exported as CSV");
+      } else {
+        toast.info(`${format.toUpperCase()} export is available via CSV`);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Export failed");
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -46,13 +74,13 @@ function ReportsPage() {
         description="Sales, inventory, and audit trails — exportable to PDF, CSV, and Excel."
         actions={
           <>
-            <Button variant="outline" className="gap-2 rounded-xl">
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => handleExport("pdf")}>
               <FileText className="size-4" /> PDF
             </Button>
-            <Button variant="outline" className="gap-2 rounded-xl">
+            <Button variant="outline" className="gap-2 rounded-xl" onClick={() => handleExport("excel")}>
               <FileSpreadsheet className="size-4" /> Excel
             </Button>
-            <Button className="gap-2 rounded-xl">
+            <Button className="gap-2 rounded-xl" onClick={() => handleExport("csv")}>
               <Download className="size-4" /> CSV
             </Button>
           </>
@@ -62,7 +90,7 @@ function ReportsPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
         <Metric label="Daily sales" value={money(kpi.dailySales ?? kpi.todaySales)} tone="brand" />
         <Metric label="Weekly revenue" value={money(kpi.weeklyRevenue)} tone="success" />
-        <Metric label="Monthly revenue" value={money(kpi.weeklyRevenue * 4.1)} tone="primary" />
+        <Metric label="Monthly revenue" value={money(kpi.monthlyRevenue)} tone="primary" />
         <Metric label="Inventory value" value={money(kpi.inventoryValue)} tone="warning" />
       </div>
 

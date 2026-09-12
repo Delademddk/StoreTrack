@@ -152,7 +152,20 @@ function DashboardPage() {
         description={`${today} · ${user?.storeName ?? ""}`}
         actions={
           <>
-            <Button variant="outline" className="rounded-xl">
+            <Button variant="outline" className="rounded-xl" onClick={async () => {
+              try {
+                const csv = await api.exportReport("csv");
+                const blob = new Blob([typeof csv === "string" ? csv : JSON.stringify(csv)], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "audit_report.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch (err: any) {
+                console.error("Export failed", err);
+              }
+            }}>
               Export CSV
             </Button>
             <Link to="/products/new">
@@ -256,7 +269,7 @@ function DashboardPage() {
                   tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(v) => `$${v / 1000}k`}
+                  tickFormatter={(v) => `GH₵${v / 1000}k`}
                 />
                 <Tooltip
                   contentStyle={{

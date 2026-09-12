@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.security import decode_access_token
-from app.repositories.data_repos import user_repo
+from app.db.repos import user_repo
 
 security = HTTPBearer(auto_error=False)
 
@@ -25,14 +25,14 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     user = user_repo.get_by_id(user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    if user.get("status") == "Disabled":
+    if user.get("Status") == "Disabled":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disabled")
     return user
 
 
 def require_role(*roles):
     def role_checker(user: dict = Depends(get_current_user)) -> dict:
-        if user.get("role") not in roles:
+        if user.get("Role") not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Requires role: {', '.join(roles)}",

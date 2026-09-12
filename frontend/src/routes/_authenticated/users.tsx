@@ -45,6 +45,7 @@ function UsersPage() {
   const [users, setUsers] = useState(seedUsers);
   const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ name: "", username: "", email: "", phone: "", role: "Cashier" });
 
   const { data: usersData } = useFetch(() => api.getUsers(), []);
 
@@ -75,13 +76,13 @@ function UsersPage() {
                 <DialogTitle>Invite team member</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-2 sm:grid-cols-2">
-                <Field label="Full name" />
-                <Field label="Username" />
-                <Field label="Email" type="email" className="sm:col-span-2" />
-                <Field label="Phone" />
+                <Field label="Full name" value={inviteForm.name} onChange={(v) => setInviteForm((f) => ({ ...f, name: v }))} />
+                <Field label="Username" value={inviteForm.username} onChange={(v) => setInviteForm((f) => ({ ...f, username: v }))} />
+                <Field label="Email" type="email" className="sm:col-span-2" value={inviteForm.email} onChange={(v) => setInviteForm((f) => ({ ...f, email: v }))} />
+                <Field label="Phone" value={inviteForm.phone} onChange={(v) => setInviteForm((f) => ({ ...f, phone: v }))} />
                 <div className="space-y-1.5">
                   <Label>Role</Label>
-                  <Select defaultValue="Cashier">
+                  <Select value={inviteForm.role} onValueChange={(v) => setInviteForm((f) => ({ ...f, role: v }))}>
                     <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
@@ -112,10 +113,16 @@ function UsersPage() {
                 <Button
                   onClick={async () => {
                     try {
-                      await api.createUser({});
+                      await api.createUser({
+                        name: inviteForm.name,
+                        username: inviteForm.username,
+                        email: inviteForm.email,
+                        phone: inviteForm.phone,
+                        role: inviteForm.role,
+                      });
                       setOpen(false);
+                      setInviteForm({ name: "", username: "", email: "", phone: "", role: "Cashier" });
                       toast.success("User created");
-                      // Refresh users list
                       const refreshed = await api.getUsers();
                       if (refreshed?.items) setUsers(refreshed.items);
                     } catch (err: any) {
@@ -285,15 +292,19 @@ function Field({
   label,
   type = "text",
   className,
+  value = "",
+  onChange,
 }: {
   label: string;
   type?: string;
   className?: string;
+  value?: string;
+  onChange?: (v: string) => void;
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label>{label}</Label>
-      <Input type={type} className="h-10" />
+      <Input type={type} className="h-10" value={value} onChange={(e) => onChange?.(e.target.value)} />
     </div>
   );
 }
