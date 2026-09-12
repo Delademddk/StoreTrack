@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { statusFor, totalQty, type Product } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
+import { ProductImage } from "@/components/storetrack/product-image";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -219,8 +220,9 @@ function SalesPage() {
                   disabled={oos}
                 >
                   <div className="aspect-square overflow-hidden bg-muted">
-                    <img
-                      src={p.image}
+                    <ProductImage
+                      image={p.image}
+                      name={p.name}
                       alt=""
                       className="size-full object-cover transition-transform group-hover:scale-105"
                     />

@@ -34,6 +34,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { statusFor } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
+import { ProductImage } from "@/components/storetrack/product-image";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -471,8 +472,9 @@ function DashboardPage() {
                   <tr key={p.id} className="transition-colors hover:bg-muted/30">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={p.image}
+                        <ProductImage
+                          image={p.image}
+                          name={p.name}
                           alt=""
                           className="size-9 rounded-lg object-cover ring-1 ring-border"
                         />

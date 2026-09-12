@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { statusFor, totalQty } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
+import { ProductImage } from "@/components/storetrack/product-image";
 
 export const Route = createFileRoute("/_authenticated/products/$id/")({
   component: ProductDetailPage,
@@ -78,8 +79,9 @@ function ProductDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           <Card className="overflow-hidden rounded-2xl border-border p-0 shadow-[var(--shadow-card)]">
             <div className="grid gap-6 p-6 md:grid-cols-[240px_1fr]">
-              <img
-                src={p.image}
+              <ProductImage
+                image={p.image}
+                name={p.name}
                 alt={p.name}
                 className="aspect-square w-full rounded-xl object-cover ring-1 ring-border"
               />

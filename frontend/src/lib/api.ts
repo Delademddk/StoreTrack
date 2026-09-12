@@ -1,5 +1,11 @@
 const API_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:3001";
 
+export const imageUrl = (path: string | null | undefined): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  return `${API_URL}${path}`;
+};
+
 async function request(path: string, options: RequestInit = {}): Promise<any> {
   const token = (() => {
     try {
@@ -51,6 +57,26 @@ export const api = {
   duplicateProduct: (id: string) => request(`/api/products/${id}/duplicate`, { method: "POST" }),
   getProductSales: (id: string) => request(`/api/products/${id}/sales`),
   getProductAudit: (id: string) => request(`/api/products/${id}/audit`),
+  uploadProductImage: async (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = (() => {
+      try {
+        const raw = localStorage.getItem("storetrack-session");
+        if (raw) return JSON.parse(raw)._token;
+      } catch { /* ignore */ }
+      return null;
+    })();
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_URL}/api/products/${id}/image`, { method: "POST", headers, body: formData });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `Upload failed: ${res.status}`);
+    }
+    return res.json();
+  },
+  deleteProductImage: (id: string) => request(`/api/products/${id}/image`, { method: "DELETE" }),
 
   // Categories
   getCategories: () => request("/api/categories"),

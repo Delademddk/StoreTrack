@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Barcode, ImagePlus, Save } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Barcode, ImagePlus, Save, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
@@ -17,8 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { suppliers, statusFor, totalQty, type Product } from "@/lib/mock-data";
-import { api } from "@/lib/api";
+import { api, imageUrl } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 
 export const Route = createFileRoute("/_authenticated/products/new")({
   component: NewProductPage,
@@ -43,6 +46,9 @@ function NewProductPage() {
     barcode: "",
     image: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof typeof form, v: unknown) => setForm((s) => ({ ...s, [k]: v }));
   const qty = form.boxes * form.itemsPerBox + form.extraPieces;
@@ -53,6 +59,36 @@ function NewProductPage() {
     createdAt: "",
     updatedAt: "",
   } as unknown as Product);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+      toast.error("Invalid file type. Allowed: JPG, PNG, WebP");
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Invalid file type. Allowed: JPG, PNG, WebP");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Maximum size: 5MB");
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageRemove = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +101,7 @@ function NewProductPage() {
         supplier: form.supplier,
         isBoxed: form.boxes > 0 || form.itemsPerBox > 1,
         boxes: form.boxes,
-        itemsPerBox: form.itemsPerBox,
+        itemsPerBox: Math.max(1, form.itemsPerBox),
         extraPieces: form.extraPieces,
         pricePerBox: form.pricePerBox,
         individualPrice: form.individualPrice,
@@ -74,6 +110,9 @@ function NewProductPage() {
         barcode: form.barcode,
         image: form.image,
       });
+      if (imageFile && product?.id) {
+        await api.uploadProductImage(product.id, imageFile);
+      }
       toast.success("Product saved");
       navigate({ to: "/products" });
     } catch (err: any) {
@@ -274,10 +313,13 @@ function NewProductPage() {
             </p>
             <Card className="overflow-hidden rounded-2xl border-border shadow-[var(--shadow-card)]">
               <div className="aspect-[4/3] bg-muted">
-                {form.image ? (
-                  <img src={form.image} alt="" className="size-full object-cover" />
+                {imagePreview || form.image ? (
+                  <img src={imagePreview || imageUrl(form.image)} alt="" className="size-full object-cover" />
                 ) : (
-                  <div className="grid size-full place-items-center text-muted-foreground">
+                  <div
+                    className="grid size-full place-items-center text-muted-foreground cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <div className="text-center">
                       <ImagePlus className="mx-auto mb-2 size-6" />
                       <p className="text-xs">Add product image</p>
@@ -286,6 +328,35 @@ function NewProductPage() {
                 )}
               </div>
               <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImagePlus className="size-3" /> {imagePreview || form.image ? "Change" : "Choose"}
+                  </Button>
+                  {(imagePreview || form.image) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-destructive hover:text-destructive"
+                      onClick={handleImageRemove}
+                    >
+                      <Trash2 className="size-3" /> Remove
+                    </Button>
+                  )}
+                </div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{form.name || "Untitled product"}</p>

@@ -54,6 +54,7 @@ import {
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 import { ProductFormModal, type ProductDraft } from "@/components/storetrack/product-form-modal";
+import { ProductImage } from "@/components/storetrack/product-image";
 import { RestockModal, type RestockDraft } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
 import { csvToObjects, downloadCsv, readTextFile, type CsvRow } from "@/lib/data-transfer";
@@ -232,11 +233,24 @@ function ProductsPage() {
 
   const handleSubmit = async (draft: ProductDraft) => {
     try {
+      const { imageFile, ...data } = draft;
       if (editing) {
-        await api.updateProduct(editing.id, draft);
+        const updated = await api.updateProduct(editing.id, data);
+        if (imageFile && updated?.id) {
+          await api.uploadProductImage(updated.id, imageFile);
+        } else if (imageFile === null && draft.image === "") {
+          try {
+            await api.deleteProductImage(editing.id);
+          } catch {
+            /* ignore if no image */
+          }
+        }
         toast.success("Product updated");
       } else {
-        await api.createProduct(draft);
+        const created = await api.createProduct(data);
+        if (imageFile && created?.id) {
+          await api.uploadProductImage(created.id, imageFile);
+        }
         toast.success("Product added");
       }
       refetch();
@@ -423,8 +437,9 @@ function ProductsPage() {
                         params={{ id: p.id }}
                         className="flex items-center gap-3"
                       >
-                        <img
-                          src={p.image}
+                        <ProductImage
+                          image={p.image}
+                          name={p.name}
                           alt=""
                           className="size-10 rounded-lg object-cover ring-1 ring-border"
                         />
@@ -493,8 +508,9 @@ function ProductsPage() {
             >
               <Link to="/products/$id" params={{ id: p.id }} className="block">
                 <div className="aspect-[4/3] overflow-hidden bg-muted">
-                  <img
-                    src={p.image}
+                  <ProductImage
+                    image={p.image}
+                    name={p.name}
                     alt={p.name}
                     className="size-full object-cover transition-transform group-hover:scale-105"
                   />

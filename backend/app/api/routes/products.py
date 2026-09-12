@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from app.schemas.product import ProductCreate, ProductUpdate, RestockRequest, Product as ProductSchema, ProductListResponse
 from app.db.repos import product_repo, category_repo, audit_repo, sale_repo
 from app.core.dependencies import get_current_user, require_role
 from app.utils.helpers import generate_id, generate_sku, now_iso
+from app.services.storage import save_product_image, delete_product_image
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -61,6 +62,16 @@ def get_product(product_id: str, user: dict = Depends(get_current_user)):
 
 @router.post("", response_model=ProductSchema, status_code=201)
 def create_product(req: ProductCreate, user: dict = Depends(require_role("Admin", "Manager"))):
+    if req.itemsPerBox < 1:
+        raise HTTPException(status_code=400, detail="Items per box must be at least 1")
+    if req.boxes < 0:
+        raise HTTPException(status_code=400, detail="Boxes cannot be negative")
+    if req.extraPieces < 0:
+        raise HTTPException(status_code=400, detail="Extra pieces cannot be negative")
+    if req.individualPrice <= 0:
+        raise HTTPException(status_code=400, detail="Individual price must be greater than 0")
+    if req.isBoxed and req.pricePerBox <= 0:
+        raise HTTPException(status_code=400, detail="Price per box is required for boxed products")
     product_id = generate_id("p")
     sku = generate_sku(req.name)
     category_id = _resolve_category_id(req.category)
@@ -135,6 +146,7 @@ def delete_product(product_id: str, user: dict = Depends(require_role("Admin")))
     existing = product_repo.get_by_id(product_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Product not found")
+    delete_product_image(existing.get("Image"))
     product_repo.delete(product_id)
     audit_repo.add({
         "id": generate_id("al"), "userName": user["Name"],
@@ -143,6 +155,56 @@ def delete_product(product_id: str, user: dict = Depends(require_role("Admin")))
         "occurredAt": now_iso(),
     })
     return {"message": "Product deleted"}
+
+
+@router.post("/{product_id}/image", response_model=ProductSchema)
+async def upload_product_image(product_id: str, file: UploadFile = File(...), user: dict = Depends(require_role("Admin", "Manager"))):
+    existing = product_repo.get_by_id(product_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    old_image = existing.get("Image")
+    try:
+        image_path = await save_product_image(file)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to save image")
+
+    updated = product_repo.update(product_id, {"image": image_path, "updatedAt": now_iso()})
+    if not updated:
+        delete_product_image(image_path)
+        raise HTTPException(status_code=500, detail="Failed to update product")
+
+    delete_product_image(old_image)
+    audit_repo.add({
+        "id": generate_id("al"), "userName": user["Name"],
+        "action": "Product Image Updated", "target": existing["Sku"],
+        "description": f"Image updated for {existing['Name']}",
+        "occurredAt": now_iso(),
+    })
+    return _db_product_to_schema(updated)
+
+
+@router.delete("/{product_id}/image", response_model=ProductSchema)
+def delete_product_image_endpoint(product_id: str, user: dict = Depends(require_role("Admin", "Manager"))):
+    existing = product_repo.get_by_id(product_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    old_image = existing.get("Image")
+    if not old_image:
+        raise HTTPException(status_code=400, detail="Product has no image")
+
+    updated = product_repo.update(product_id, {"image": None, "updatedAt": now_iso()})
+    delete_product_image(old_image)
+    audit_repo.add({
+        "id": generate_id("al"), "userName": user["Name"],
+        "action": "Product Image Removed", "target": existing["Sku"],
+        "description": f"Image removed for {existing['Name']}",
+        "occurredAt": now_iso(),
+    })
+    return _db_product_to_schema(updated)
 
 
 @router.post("/{product_id}/restock", response_model=ProductSchema)

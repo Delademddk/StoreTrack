@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, ImagePlus, Save, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/storetrack/page-header";
@@ -17,8 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { suppliers } from "@/lib/mock-data";
-import { api } from "@/lib/api";
+import { api, imageUrl } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 
 export const Route = createFileRoute("/_authenticated/products/$id/edit")({
   component: EditProductPage,
@@ -35,6 +38,9 @@ function EditProductPage() {
   const [product, setProduct] = useState<any>(null);
   const [form, setForm] = useState<any>(null);
   const [notFoundState, setNotFound] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categoriesData } = useFetch(() => api.getCategories(), []);
   const categories = (categoriesData || []).map((c: any) => typeof c === "string" ? c : c.name);
@@ -43,6 +49,7 @@ function EditProductPage() {
     api.getProduct(id).then((p) => {
       setProduct(p);
       setForm(p);
+      setImagePreview(p.image || null);
     }).catch(() => setNotFound(true));
   }, [id]);
 
@@ -57,6 +64,37 @@ function EditProductPage() {
   if (!product || !form) return null;
   const set = (k: string, v: any) =>
     setForm((s: any) => ({ ...s, [k]: v }));
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+      toast.error("Invalid file type. Allowed: JPG, PNG, WebP");
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Invalid file type. Allowed: JPG, PNG, WebP");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Maximum size: 5MB");
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageRemove = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    set("image", "");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   return (
     <>
@@ -75,7 +113,17 @@ function EditProductPage() {
         onSubmit={async (e) => {
           e.preventDefault();
           try {
-            await api.updateProduct(product.id, form);
+            const { imageFile: _imageFile, ...data } = form;
+            await api.updateProduct(product.id, data);
+            if (imageFile) {
+              await api.uploadProductImage(product.id, imageFile);
+            } else if (imagePreview === null && product.image) {
+              try {
+                await api.deleteProductImage(product.id);
+              } catch {
+                /* ignore */
+              }
+            }
             toast.success("Product updated");
             navigate({ to: "/products/$id", params: { id: product.id } });
           } catch (err: any) {
@@ -166,6 +214,54 @@ function EditProductPage() {
                 onChange={(e) => set("description", e.target.value)}
                 rows={3}
               />
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label>Product image</Label>
+              <div className="flex items-start gap-3">
+                <div
+                  className="grid size-20 place-items-center rounded-xl border border-dashed border-border bg-muted/40 overflow-hidden cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {imagePreview ? (
+                    <img src={imageUrl(imagePreview)} alt="" className="size-full object-cover" />
+                  ) : (
+                    <ImagePlus className="size-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImagePlus className="size-3" />{" "}
+                    {imagePreview ? "Change image" : "Choose image"}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    JPG, PNG, or WebP. Max 5MB.
+                  </p>
+                  {imagePreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-destructive hover:text-destructive"
+                      onClick={handleImageRemove}
+                    >
+                      <Trash2 className="size-3" /> Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </Card>
