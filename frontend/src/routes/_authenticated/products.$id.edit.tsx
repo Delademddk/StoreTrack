@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categories as defaultCategories, suppliers } from "@/lib/mock-data";
+import { suppliers } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 
@@ -37,7 +37,7 @@ function EditProductPage() {
   const [notFoundState, setNotFound] = useState(false);
 
   const { data: categoriesData } = useFetch(() => api.getCategories(), []);
-  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+  const categories = (categoriesData || []).map((c: any) => typeof c === "string" ? c : c.name);
 
   useEffect(() => {
     api.getProduct(id).then((p) => {

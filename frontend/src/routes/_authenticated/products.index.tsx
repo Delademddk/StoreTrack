@@ -47,8 +47,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  categories as defaultCategories,
-  products as seedProducts,
   statusFor,
   totalQty,
   type Product,
@@ -198,7 +196,7 @@ function ProductsPage() {
   const [status, setStatus] = useState("all");
   const [view, setView] = useState<"list" | "grid">("list");
   const { data: categoriesData } = useFetch(() => api.getCategories(), []);
-  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+  const categories = (categoriesData || []).map((c: any) => typeof c === "string" ? c : c.name);
 
   const { data: productsData, refetch } = useFetch(() => api.getProducts(), []);
 
@@ -235,14 +233,13 @@ function ProductsPage() {
   const handleSubmit = async (draft: ProductDraft) => {
     try {
       if (editing) {
-        const updated = await api.updateProduct(editing.id, draft);
-        setItems((list) => list.map((p) => (p.id === editing.id ? updated : p)));
+        await api.updateProduct(editing.id, draft);
         toast.success("Product updated");
       } else {
-        const created = await api.createProduct(draft);
-        setItems((list) => [created, ...list]);
+        await api.createProduct(draft);
         toast.success("Product added");
       }
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to save product");
     }
@@ -250,9 +247,9 @@ function ProductsPage() {
 
   const handleDuplicate = async (p: Product) => {
     try {
-      const copy = await api.duplicateProduct(p.id);
-      setItems((list) => [copy, ...list]);
+      await api.duplicateProduct(p.id);
       toast.success("Product duplicated");
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to duplicate");
     }
@@ -261,8 +258,8 @@ function ProductsPage() {
   const handleDelete = async (p: Product) => {
     try {
       await api.deleteProduct(p.id);
-      setItems((list) => list.filter((x) => x.id !== p.id));
       toast.success(`${p.name} deleted`);
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to delete");
     }
@@ -270,8 +267,7 @@ function ProductsPage() {
 
   const handleRestock = async (product: Product, draft: RestockDraft) => {
     try {
-      const updated = await api.restockProduct(product.id, draft);
-      setItems((list) => list.map((p) => (p.id === product.id ? updated : p)));
+      await api.restockProduct(product.id, draft);
       const parts = [
         draft.addBoxes > 0 ? `${draft.addBoxes} box${draft.addBoxes === 1 ? "" : "es"}` : null,
         draft.addPieces > 0 ? `${draft.addPieces} loose` : null,
@@ -279,6 +275,7 @@ function ProductsPage() {
       toast.success(`Restocked ${product.name}`, {
         description: `${parts.join(" · ")} · ${draft.reason}`,
       });
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to restock");
     }

@@ -39,13 +39,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
-import { activity } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useFetch } from "@/hooks/use-fetch";
+
+type AppRole = "Admin" | "Manager" | "Cashier" | "Keeper";
 
 interface NavItem {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
   match?: string;
+  roles?: AppRole[];
 }
 
 const NAV: NavItem[] = [
@@ -53,13 +57,18 @@ const NAV: NavItem[] = [
   { to: "/products", label: "Products", icon: Package, match: "/products" },
   { to: "/sales", label: "Sales", icon: ShoppingCart },
   { to: "/customers", label: "Customers", icon: UserRound, match: "/customers" },
-  { to: "/reports", label: "Reports", icon: TrendingUp },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/reports", label: "Reports", icon: TrendingUp, roles: ["Admin", "Manager"] },
+  { to: "/users", label: "Users", icon: Users, roles: ["Admin"] },
+  { to: "/settings", label: "Settings", icon: SettingsIcon, roles: ["Admin"] },
 ];
 
 function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
+  const visibleNav = useMemo(
+    () => NAV.filter((item) => !item.roles || (user?.role && item.roles.includes(user.role))),
+    [user?.role],
+  );
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -87,7 +96,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             Workspace
           </div>
         )}
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = item.match ? pathname.startsWith(item.match) : pathname === item.to;
           const Icon = item.icon;
           return (
@@ -171,7 +180,9 @@ function ThemeToggleButton() {
 
 function NotificationsPopover() {
   const [open, setOpen] = useState(false);
-  const unread = 3;
+  const { data: activityData } = useFetch(() => api.getActivity(), []);
+  const activity = activityData || [];
+  const unread = activity.length > 0 ? Math.min(activity.length, 3) : 0;
   return (
     <div className="relative">
       <Button
@@ -208,7 +219,7 @@ function NotificationsPopover() {
             </div>
             <ScrollArea className="max-h-[380px]">
               <div className="divide-y divide-border">
-                {activity.slice(0, 6).map((a) => (
+                {activity.slice(0, 6).map((a: any) => (
                   <div key={a.id} className="flex gap-3 px-4 py-3 hover:bg-muted/50">
                     <div
                       className={cn(
@@ -407,11 +418,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <User className="mr-2 size-3.5" /> Profile
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings">
-                    <SettingsIcon className="mr-2 size-3.5" /> Settings
-                  </Link>
-                </DropdownMenuItem>
+                {(user?.role === "Admin" || user?.role === "Manager") && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">
+                      <SettingsIcon className="mr-2 size-3.5" /> Settings
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {

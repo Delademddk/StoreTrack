@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PageHeader, StatusBadge, moneyExact } from "@/components/storetrack/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { auditLog as defaultAuditLog, sales as defaultSales, statusFor, totalQty } from "@/lib/mock-data";
+import { statusFor, totalQty } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 
@@ -50,8 +50,8 @@ function ProductDetailPage() {
   if (!product) return null;
 
   const p = product;
-  const productSales = salesData || defaultSales.filter((s) => s.items.some((i: any) => i.productId === p.id));
-  const productAudit = auditData || defaultAuditLog.filter((l) => l.target.includes(p.sku));
+  const productSales = salesData || [];
+  const productAudit = auditData || [];
 
   return (
     <>
@@ -180,7 +180,7 @@ function ProductDetailPage() {
             <p className="text-xs text-muted-foreground">Full traceability</p>
           </div>
           <ol className="relative m-5 border-l border-border pl-6">
-            {(productAudit.length ? productAudit : defaultAuditLog.slice(0, 4)).map((a: any) => (
+            {(productAudit.length ? productAudit : []).map((a: any) => (
               <li key={a.id} className="mb-6 last:mb-0">
                 <span className="absolute -left-1.5 grid size-3 place-items-center rounded-full bg-brand ring-4 ring-background" />
                 <p className="text-sm font-semibold">{a.action}</p>

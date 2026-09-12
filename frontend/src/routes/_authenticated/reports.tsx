@@ -19,12 +19,6 @@ import { PageHeader, money } from "@/components/storetrack/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  auditLog as defaultAuditLog,
-  bestSellers as defaultBestSellers,
-  kpi as defaultKpi,
-  revenueSeries as defaultRevenueSeries,
-} from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 
@@ -38,10 +32,10 @@ function ReportsPage() {
   const { data: bestSellersData } = useFetch(() => api.getTopProducts(), []);
   const { data: auditData } = useFetch(() => api.getAuditLog(), []);
 
-  const kpi = metrics || defaultKpi;
-  const revenueSeries = revenueData || defaultRevenueSeries;
-  const bestSellers = bestSellersData || defaultBestSellers;
-  const auditLog = auditData || defaultAuditLog;
+  const kpi = metrics || { totalProducts: 0, itemsInStock: 0, todaySales: 0, todayOrders: 0, weeklyRevenue: 0, inventoryValue: 0, lowStock: 0, outOfStock: 0 };
+  const revenueSeries = revenueData || [];
+  const bestSellers = bestSellersData || [];
+  const auditLog = auditData || [];
 
   const downloadFile = (content: string, filename: string, type: string) => {
     const blob = new Blob([content], { type });

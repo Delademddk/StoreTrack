@@ -31,15 +31,7 @@ import { PageHeader, money, moneyExact } from "@/components/storetrack/page-head
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  kpi as defaultKpi,
-  revenueSeries as defaultRevenue,
-  products as defaultProducts,
-  activity as defaultActivity,
-  bestSellers as defaultBestSellers,
-  categoryBreakdown as defaultCategoryBreakdown,
-  statusFor,
-} from "@/lib/mock-data";
+import { statusFor } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 import { useAuth } from "@/lib/auth-context";
@@ -114,6 +106,7 @@ const CHART_COLORS = [
 
 function DashboardPage() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "Admin" || user?.role === "Manager";
   const [range, setRange] = useState("month");
 
   const { data: kpiData } = useFetch(() => api.getKPIs(), []);
@@ -123,11 +116,11 @@ function DashboardPage() {
   const { data: categoryData } = useFetch(() => api.getCategoryBreakdown(), []);
   const { data: productsData } = useFetch(() => api.getProducts({ status: "low_stock", pageSize: "5" }), []);
 
-  const kpi = kpiData || defaultKpi;
-  const revenueSeries = revenueData || defaultRevenue;
-  const activityItems = activityData || defaultActivity;
-  const bestSellersItems = bestSellersData || defaultBestSellers;
-  const categoryItems = categoryData || defaultCategoryBreakdown;
+  const kpi = kpiData || { totalProducts: 0, itemsInStock: 0, todaySales: 0, todayOrders: 0, weeklyRevenue: 0, inventoryValue: 0, lowStock: 0, outOfStock: 0 };
+  const revenueSeries = revenueData || [];
+  const activityItems = activityData || [];
+  const bestSellersItems = bestSellersData || [];
+  const categoryItems = categoryData || [];
   const lowStockProducts = (productsData?.items || []).slice(0, 5);
 
   const trimmed =
@@ -152,22 +145,24 @@ function DashboardPage() {
         description={`${today} · ${user?.storeName ?? ""}`}
         actions={
           <>
-            <Button variant="outline" className="rounded-xl" onClick={async () => {
-              try {
-                const csv = await api.exportReport("csv");
-                const blob = new Blob([typeof csv === "string" ? csv : JSON.stringify(csv)], { type: "text/csv" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "audit_report.csv";
-                a.click();
-                URL.revokeObjectURL(url);
-              } catch (err: any) {
-                console.error("Export failed", err);
-              }
-            }}>
-              Export CSV
-            </Button>
+            {isAdmin && (
+              <Button variant="outline" className="rounded-xl" onClick={async () => {
+                try {
+                  const csv = await api.exportReport("csv");
+                  const blob = new Blob([typeof csv === "string" ? csv : JSON.stringify(csv)], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "audit_report.csv";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch (err: any) {
+                  console.error("Export failed", err);
+                }
+              }}>
+                Export CSV
+              </Button>
+            )}
             <Link to="/products/new">
               <Button className="rounded-xl">+ Add product</Button>
             </Link>
@@ -176,132 +171,153 @@ function DashboardPage() {
       />
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <KpiCard
-          label="Total products"
-          value={kpi.totalProducts.toString()}
-          icon={Package}
-          tone="brand"
-          sub={`${kpi.outOfStock} out of stock`}
-        />
-        <KpiCard
-          label="Items in stock"
-          value={kpi.itemsInStock.toLocaleString()}
-          icon={Boxes}
-          tone="primary"
-          delta={{ value: "2.4%", positive: true }}
-        />
-        <KpiCard
-          label="Today's sales"
-          value={money(kpi.todaySales)}
-          icon={ShoppingBag}
-          tone="success"
-          delta={{ value: "12.4%", positive: true }}
-          sub={`${kpi.todayOrders} orders`}
-        />
-        <KpiCard
-          label="Weekly revenue"
-          value={money(kpi.weeklyRevenue)}
-          icon={DollarSign}
-          tone="brand"
-          delta={{ value: "8.1%", positive: true }}
-        />
-        <KpiCard
-          label="Inventory value"
-          value={money(kpi.inventoryValue)}
-          icon={Warehouse}
-          tone="primary"
-          sub="Retail valuation"
-        />
-        <KpiCard
-          label="Low stock"
-          value={kpi.lowStock.toString()}
-          icon={TriangleAlert}
-          tone="warning"
-          sub="Needs reorder"
-        />
-      </div>
+      {isAdmin ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <KpiCard
+            label="Total products"
+            value={kpi.totalProducts.toString()}
+            icon={Package}
+            tone="brand"
+            sub={`${kpi.outOfStock} out of stock`}
+          />
+          <KpiCard
+            label="Items in stock"
+            value={kpi.itemsInStock.toLocaleString()}
+            icon={Boxes}
+            tone="primary"
+            delta={{ value: "2.4%", positive: true }}
+          />
+          <KpiCard
+            label="Today's sales"
+            value={money(kpi.todaySales)}
+            icon={ShoppingBag}
+            tone="success"
+            delta={{ value: "12.4%", positive: true }}
+            sub={`${kpi.todayOrders} orders`}
+          />
+          <KpiCard
+            label="Weekly revenue"
+            value={money(kpi.weeklyRevenue)}
+            icon={DollarSign}
+            tone="brand"
+            delta={{ value: "8.1%", positive: true }}
+          />
+          <KpiCard
+            label="Inventory value"
+            value={money(kpi.inventoryValue)}
+            icon={Warehouse}
+            tone="primary"
+            sub="Retail valuation"
+          />
+          <KpiCard
+            label="Low stock"
+            value={kpi.lowStock.toString()}
+            icon={TriangleAlert}
+            tone="warning"
+            sub="Needs reorder"
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <KpiCard
+            label="Today's sales"
+            value={money(kpi.todaySales)}
+            icon={ShoppingBag}
+            tone="success"
+            delta={{ value: "12.4%", positive: true }}
+            sub={`${kpi.todayOrders} orders`}
+          />
+          <KpiCard
+            label="Low stock"
+            value={kpi.lowStock.toString()}
+            icon={TriangleAlert}
+            tone="warning"
+            sub="Needs reorder"
+          />
+        </div>
+      )}
 
-      {/* Chart + activity */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card className="rounded-2xl border-border p-0 shadow-[var(--shadow-card)] lg:col-span-2">
-          <div className="flex flex-col gap-3 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold">Revenue analytics</h2>
-              <p className="text-xs text-muted-foreground">
-                Consolidated across all sales channels
-              </p>
+      {/* Chart + activity — Admin only */}
+      {isAdmin && (
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <Card className="rounded-2xl border-border p-0 shadow-[var(--shadow-card)] lg:col-span-2">
+            <div className="flex flex-col gap-3 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-sm font-semibold">Revenue analytics</h2>
+                <p className="text-xs text-muted-foreground">
+                  Consolidated across all sales channels
+                </p>
+              </div>
+              <Tabs value={range} onValueChange={setRange}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="today" className="text-xs">
+                    Today
+                  </TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs">
+                    Week
+                  </TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs">
+                    Month
+                  </TabsTrigger>
+                  <TabsTrigger value="year" className="text-xs">
+                    Year
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            <Tabs value={range} onValueChange={setRange}>
-              <TabsList className="h-8">
-                <TabsTrigger value="today" className="text-xs">
-                  Today
-                </TabsTrigger>
-                <TabsTrigger value="week" className="text-xs">
-                  Week
-                </TabsTrigger>
-                <TabsTrigger value="month" className="text-xs">
-                  Month
-                </TabsTrigger>
-                <TabsTrigger value="year" className="text-xs">
-                  Year
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          <div className="h-[280px] p-5">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trimmed} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.28} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => `GH₵${v / 1000}k`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                  formatter={(v: number) => moneyExact(v)}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="var(--chart-1)"
-                  strokeWidth={2.5}
-                  fill="url(#revGrad)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+            <div className="h-[280px] p-5">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trimmed} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.28} />
+                      <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `GH₵${v / 1000}k`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                    formatter={(v: number) => moneyExact(v)}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="var(--chart-1)"
+                    strokeWidth={2.5}
+                    fill="url(#revGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
-        <Card className="rounded-2xl border-border p-0 shadow-[var(--shadow-card)]">
-          <div className="flex items-center justify-between border-b border-border p-5">
-            <div className="flex items-center gap-2">
-              <Activity className="size-4 text-brand" />
-              <h2 className="text-sm font-semibold">Live activity</h2>
+          <Card className="rounded-2xl border-border p-0 shadow-[var(--shadow-card)]">
+            <div className="flex items-center justify-between border-b border-border p-5">
+              <div className="flex items-center gap-2">
+                <Activity className="size-4 text-brand" />
+                <h2 className="text-sm font-semibold">Live activity</h2>
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground">Last 24h</span>
             </div>
-            <span className="text-[11px] font-medium text-muted-foreground">Last 24h</span>
-          </div>
-          <ul className="divide-y divide-border">
-                  {activityItems.map((a: any) => (
+            <ul className="divide-y divide-border">
+                    {activityItems.map((a: any) => (
               <li key={a.id} className="flex gap-3 p-4 transition-colors hover:bg-muted/40">
                 <span
                   className={cn(
@@ -325,101 +341,104 @@ function DashboardPage() {
             ))}
           </ul>
         </Card>
-      </div>
+        </div>
+      )}
 
-      {/* Best-sellers + category */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card className="rounded-2xl border-border p-5 shadow-[var(--shadow-card)] lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold">Best-selling products</h2>
-              <p className="text-xs text-muted-foreground">By units sold this month</p>
+      {/* Best-sellers + category — Admin only */}
+      {isAdmin && (
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <Card className="rounded-2xl border-border p-5 shadow-[var(--shadow-card)] lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold">Best-selling products</h2>
+                <p className="text-xs text-muted-foreground">By units sold this month</p>
+              </div>
             </div>
-          </div>
-          <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={bestSellersItems}
-                layout="vertical"
-                margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: "var(--foreground)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={160}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                  formatter={(v: number) => `${v} units`}
-                />
-                <Bar dataKey="units" fill="var(--chart-1)" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="rounded-2xl border-border p-5 shadow-[var(--shadow-card)]">
-          <h2 className="text-sm font-semibold">Category performance</h2>
-          <p className="mb-4 text-xs text-muted-foreground">Share of stock value</p>
-          <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryItems}
-                  dataKey="value"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={2}
+            <div className="h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={bestSellersItems}
+                  layout="vertical"
+                  margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
                 >
-                  {categoryItems.map((_: any, i: number) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--popover)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                  formatter={(v: number) => `${v}%`}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <ul className="mt-2 space-y-1.5 text-xs">
-            {categoryItems.map((c: any, i: number) => (
-              <li key={c.name} className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
                   />
-                  {c.name}
-                </span>
-                <span className="font-mono text-muted-foreground">{c.value}%</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "var(--foreground)" }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={160}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                    formatter={(v: number) => `${v} units`}
+                  />
+                  <Bar dataKey="units" fill="var(--chart-1)" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
-      {/* Low stock intelligence */}
+          <Card className="rounded-2xl border-border p-5 shadow-[var(--shadow-card)]">
+            <h2 className="text-sm font-semibold">Category performance</h2>
+            <p className="mb-4 text-xs text-muted-foreground">Share of stock value</p>
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryItems}
+                    dataKey="value"
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={2}
+                  >
+                    {categoryItems.map((_: any, i: number) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                    formatter={(v: number) => `${v}%`}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <ul className="mt-2 space-y-1.5 text-xs">
+              {categoryItems.map((c: any, i: number) => (
+                <li key={c.name} className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                    />
+                    {c.name}
+                  </span>
+                  <span className="font-mono text-muted-foreground">{c.value}%</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+      )}
+
+      {/* Low stock intelligence — all roles */}
       <Card className="mt-6 rounded-2xl border-border p-0 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>

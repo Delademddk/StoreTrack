@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categories as defaultCategories, suppliers, statusFor, totalQty, type Product } from "@/lib/mock-data";
+import { suppliers, statusFor, totalQty, type Product } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/products/new")({
 function NewProductPage() {
   const navigate = useNavigate();
   const { data: categoriesData } = useFetch(() => api.getCategories(), []);
-  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+  const categories = (categoriesData || []).map((c: any) => typeof c === "string" ? c : c.name);
   const [form, setForm] = useState({
     name: "",
     category: categories[0],
