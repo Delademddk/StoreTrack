@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
   ChevronDown,
@@ -313,6 +313,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -416,6 +417,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => {
                     logout();
                     toast.success("Signed out");
+                    navigate({ to: "/login" });
                   }}
                 >
                   <LogOut className="mr-2 size-3.5" /> Log out
