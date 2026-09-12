@@ -31,4 +31,10 @@ app.include_router(import_export.router)
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "service": "StoreTrack V3 API"}
+    from app.db.database import test_connection
+    db_ok = test_connection()
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "service": "StoreTrack V3 API",
+        "database": "connected" if db_ok else "disconnected",
+    }

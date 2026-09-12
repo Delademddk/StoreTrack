@@ -1,7 +1,7 @@
 import requests
 import sys
 
-BASE = "http://localhost:3001"
+BASE = "http://localhost:8000"
 
 def test_comprehensive():
     # Login as admin

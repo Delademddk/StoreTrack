@@ -71,11 +71,11 @@ export function StatusBadge({ status }: { status: "in_stock" | "low_stock" | "ou
 }
 
 export const money = (n: number) =>
-  new Intl.NumberFormat("en-US", {
+  new Intl.NumberFormat("en-GH", {
     style: "currency",
-    currency: "USD",
+    currency: "GHS",
     maximumFractionDigits: n < 100 ? 2 : 0,
   }).format(n);
 
 export const moneyExact = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+  new Intl.NumberFormat("en-GH", { style: "currency", currency: "GHS" }).format(n);
