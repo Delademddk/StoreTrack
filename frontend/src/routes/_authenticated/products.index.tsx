@@ -58,6 +58,7 @@ import { ProductImage } from "@/components/storetrack/product-image";
 import { RestockModal, type RestockDraft } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
 import { csvToObjects, downloadCsv, readTextFile, type CsvRow } from "@/lib/data-transfer";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/_authenticated/products/")({
   component: ProductsPage,
@@ -308,14 +309,23 @@ function ProductsPage() {
             <input
               ref={importInputRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls"
               className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
-                  const text = await file.text();
-                  const result = await api.importProducts(text);
+                  let csvText: string;
+                  const ext = file.name.split(".").pop()?.toLowerCase();
+                  if (ext === "csv") {
+                    csvText = await file.text();
+                  } else {
+                    const data = await file.arrayBuffer();
+                    const workbook = XLSX.read(data, { type: "array" });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    csvText = XLSX.utils.sheet_to_csv(firstSheet);
+                  }
+                  const result = await api.importProducts(csvText);
                   toast.success(`Imported ${result.imported} products`, {
                     description: result.errors?.length ? `${result.errors.length} errors` : undefined,
                   });
@@ -328,14 +338,14 @@ function ProductsPage() {
             />
             <Button variant="outline" className="gap-2 rounded-xl" onClick={async () => {
               try {
-                const csv = await api.exportReport("products");
-                const blob = new Blob([typeof csv === "string" ? csv : JSON.stringify(csv)], { type: "text/csv" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "products_export.csv";
-                a.click();
-                URL.revokeObjectURL(url);
+                const now = new Date();
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+                const data = await api.exportProducts();
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+                XLSX.writeFile(workbook, `products_export_${timestamp}.xlsx`);
                 toast.success("Products exported");
               } catch (err: any) {
                 toast.error(err?.message || "Export failed");

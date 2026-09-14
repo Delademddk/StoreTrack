@@ -140,6 +140,9 @@ export const api = {
   getBackups: () => request("/api/settings/backup/list"),
   exportBackup: () => request("/api/settings/backup/export", { method: "POST" }),
 
+  // Product export
+  exportProducts: () => request("/api/reports/products/export"),
+
   // Data transfer
   importProducts: async (csvText: string) => {
     const blob = new Blob([csvText], { type: "text/csv" });
