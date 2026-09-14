@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { categories as defaultCategories, products as defaultProducts, statusFor, totalQty, type Product } from "@/lib/mock-data";
+import { statusFor, totalQty, type Product } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
+import { ProductImage } from "@/components/storetrack/product-image";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -57,10 +58,10 @@ function SalesPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const { data: categoriesData } = useFetch(() => api.getCategories(), []);
-  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+  const categories = (categoriesData || []).map((c: any) => typeof c === "string" ? c : c.name);
 
   const { data: productsData } = useFetch(() => api.getProducts(), []);
-  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     if (productsData?.items) setProducts(productsData.items);
@@ -219,8 +220,9 @@ function SalesPage() {
                   disabled={oos}
                 >
                   <div className="aspect-square overflow-hidden bg-muted">
-                    <img
-                      src={p.image}
+                    <ProductImage
+                      image={p.image}
+                      name={p.name}
                       alt=""
                       className="size-full object-cover transition-transform group-hover:scale-105"
                     />

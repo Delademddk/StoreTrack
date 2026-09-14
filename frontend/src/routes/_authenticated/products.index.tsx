@@ -47,8 +47,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  categories as defaultCategories,
-  products as seedProducts,
   statusFor,
   totalQty,
   type Product,
@@ -56,9 +54,11 @@ import {
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 import { ProductFormModal, type ProductDraft } from "@/components/storetrack/product-form-modal";
+import { ProductImage } from "@/components/storetrack/product-image";
 import { RestockModal, type RestockDraft } from "@/components/storetrack/restock-modal";
 import { cn } from "@/lib/utils";
 import { csvToObjects, downloadCsv, readTextFile, type CsvRow } from "@/lib/data-transfer";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/_authenticated/products/")({
   component: ProductsPage,
@@ -198,7 +198,7 @@ function ProductsPage() {
   const [status, setStatus] = useState("all");
   const [view, setView] = useState<"list" | "grid">("list");
   const { data: categoriesData } = useFetch(() => api.getCategories(), []);
-  const categories = (categoriesData || defaultCategories).map((c: any) => typeof c === "string" ? c : c.name);
+  const categories = (categoriesData || []).map((c: any) => typeof c === "string" ? c : c.name);
 
   const { data: productsData, refetch } = useFetch(() => api.getProducts(), []);
 
@@ -234,15 +234,27 @@ function ProductsPage() {
 
   const handleSubmit = async (draft: ProductDraft) => {
     try {
+      const { imageFile, ...data } = draft;
       if (editing) {
-        const updated = await api.updateProduct(editing.id, draft);
-        setItems((list) => list.map((p) => (p.id === editing.id ? updated : p)));
+        const updated = await api.updateProduct(editing.id, data);
+        if (imageFile && updated?.id) {
+          await api.uploadProductImage(updated.id, imageFile);
+        } else if (imageFile === null && draft.image === "") {
+          try {
+            await api.deleteProductImage(editing.id);
+          } catch {
+            /* ignore if no image */
+          }
+        }
         toast.success("Product updated");
       } else {
-        const created = await api.createProduct(draft);
-        setItems((list) => [created, ...list]);
+        const created = await api.createProduct(data);
+        if (imageFile && created?.id) {
+          await api.uploadProductImage(created.id, imageFile);
+        }
         toast.success("Product added");
       }
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to save product");
     }
@@ -250,9 +262,9 @@ function ProductsPage() {
 
   const handleDuplicate = async (p: Product) => {
     try {
-      const copy = await api.duplicateProduct(p.id);
-      setItems((list) => [copy, ...list]);
+      await api.duplicateProduct(p.id);
       toast.success("Product duplicated");
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to duplicate");
     }
@@ -261,8 +273,8 @@ function ProductsPage() {
   const handleDelete = async (p: Product) => {
     try {
       await api.deleteProduct(p.id);
-      setItems((list) => list.filter((x) => x.id !== p.id));
       toast.success(`${p.name} deleted`);
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to delete");
     }
@@ -270,8 +282,7 @@ function ProductsPage() {
 
   const handleRestock = async (product: Product, draft: RestockDraft) => {
     try {
-      const updated = await api.restockProduct(product.id, draft);
-      setItems((list) => list.map((p) => (p.id === product.id ? updated : p)));
+      await api.restockProduct(product.id, draft);
       const parts = [
         draft.addBoxes > 0 ? `${draft.addBoxes} box${draft.addBoxes === 1 ? "" : "es"}` : null,
         draft.addPieces > 0 ? `${draft.addPieces} loose` : null,
@@ -279,6 +290,7 @@ function ProductsPage() {
       toast.success(`Restocked ${product.name}`, {
         description: `${parts.join(" · ")} · ${draft.reason}`,
       });
+      refetch();
     } catch (err: any) {
       toast.error(err?.message || "Failed to restock");
     }
@@ -297,14 +309,23 @@ function ProductsPage() {
             <input
               ref={importInputRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls"
               className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
-                  const text = await file.text();
-                  const result = await api.importProducts(text);
+                  let csvText: string;
+                  const ext = file.name.split(".").pop()?.toLowerCase();
+                  if (ext === "csv") {
+                    csvText = await file.text();
+                  } else {
+                    const data = await file.arrayBuffer();
+                    const workbook = XLSX.read(data, { type: "array" });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    csvText = XLSX.utils.sheet_to_csv(firstSheet);
+                  }
+                  const result = await api.importProducts(csvText);
                   toast.success(`Imported ${result.imported} products`, {
                     description: result.errors?.length ? `${result.errors.length} errors` : undefined,
                   });
@@ -317,14 +338,14 @@ function ProductsPage() {
             />
             <Button variant="outline" className="gap-2 rounded-xl" onClick={async () => {
               try {
-                const csv = await api.exportReport("products");
-                const blob = new Blob([typeof csv === "string" ? csv : JSON.stringify(csv)], { type: "text/csv" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "products_export.csv";
-                a.click();
-                URL.revokeObjectURL(url);
+                const now = new Date();
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+                const data = await api.exportProducts();
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+                XLSX.writeFile(workbook, `products_export_${timestamp}.xlsx`);
                 toast.success("Products exported");
               } catch (err: any) {
                 toast.error(err?.message || "Export failed");
@@ -426,8 +447,9 @@ function ProductsPage() {
                         params={{ id: p.id }}
                         className="flex items-center gap-3"
                       >
-                        <img
-                          src={p.image}
+                        <ProductImage
+                          image={p.image}
+                          name={p.name}
                           alt=""
                           className="size-10 rounded-lg object-cover ring-1 ring-border"
                         />
@@ -496,8 +518,9 @@ function ProductsPage() {
             >
               <Link to="/products/$id" params={{ id: p.id }} className="block">
                 <div className="aspect-[4/3] overflow-hidden bg-muted">
-                  <img
-                    src={p.image}
+                  <ProductImage
+                    image={p.image}
+                    name={p.name}
                     alt={p.name}
                     className="size-full object-cover transition-transform group-hover:scale-105"
                   />

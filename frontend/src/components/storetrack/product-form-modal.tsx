@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Barcode, Package, Plus, Save } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Barcode, ImagePlus, Package, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -26,13 +26,17 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { suppliers, totalQty, type Product } from "@/lib/mock-data";
-import { api } from "@/lib/api";
+import { api, imageUrl } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 
 const CREATE_CATEGORY_VALUE = "__create_new_category__";
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+
 export type ProductDraft = Omit<Product, "id" | "sku" | "createdAt" | "updatedAt" | "image"> & {
   image?: string;
+  imageFile?: File | null;
 };
 
 const emptyDraft = (defaultCategory: string): ProductDraft => ({
@@ -50,6 +54,7 @@ const emptyDraft = (defaultCategory: string): ProductDraft => ({
   description: "",
   barcode: "",
   image: "",
+  imageFile: null,
 });
 
 export function ProductFormModal({
@@ -69,17 +74,19 @@ export function ProductFormModal({
   const categories = categoriesData || [];
   const [form, setForm] = useState<ProductDraft>(() => emptyDraft(categories[0]?.name ?? ""));
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
     if (initial) {
       const { id: _id, sku: _sku, createdAt: _c, updatedAt: _u, ...rest } = initial;
-      setForm({ ...rest });
+      setForm({ ...rest, imageFile: null });
+      setImagePreview(rest.image || null);
     } else {
       setForm(emptyDraft(categories[0]?.name ?? ""));
+      setImagePreview(null);
     }
-    // Only reset when opening / switching the edited product.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
 
   const set = <K extends keyof ProductDraft>(k: K, v: ProductDraft[K]) =>
@@ -97,11 +104,47 @@ export function ProductFormModal({
 
   const handleCategoryCreated = async (name: string) => {
     try {
-      const created = await api.createCategory({ name, color: "#6b7280", icon: "Package", description: "" });
+      const created = await api.createCategory({
+        name,
+        color: "#6b7280",
+        icon: "Package",
+        description: "",
+      });
       if (created) set("category", created.name);
     } catch (err: any) {
       toast.error(err?.message || "Failed to create category");
     }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+      toast.error("Invalid file type. Allowed: JPG, PNG, WebP");
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Invalid file type. Allowed: JPG, PNG, WebP");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Maximum size: 5MB");
+      return;
+    }
+
+    set("imageFile", file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageRemove = () => {
+    set("imageFile", null);
+    set("image", "");
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const validate = (): string | null => {
@@ -128,7 +171,7 @@ export function ProductFormModal({
     }
     const normalized: ProductDraft = form.isBoxed
       ? form
-      : { ...form, boxes: 0, itemsPerBox: 0, pricePerBox: 0 };
+      : { ...form, boxes: 0, itemsPerBox: 1, pricePerBox: 0 };
     onSubmit(normalized);
     onOpenChange(false);
   };
@@ -250,6 +293,55 @@ export function ProductFormModal({
                       onChange={(e) => set("description", e.target.value)}
                       rows={2}
                     />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>
+                      Product image <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="grid size-20 place-items-center rounded-xl border border-dashed border-border bg-muted/40 overflow-hidden cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {imagePreview ? (
+                          <img src={imageUrl(imagePreview)} alt="" className="size-full object-cover" />
+                        ) : (
+                          <ImagePlus className="size-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp"
+                          className="hidden"
+                          onChange={handleImageSelect}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-lg"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          Choose image
+                        </Button>
+                        <p className="text-[11px] text-muted-foreground">
+                          JPG, PNG, or WebP. Max 5MB.
+                        </p>
+                        {(imagePreview || form.image) && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 gap-1 text-destructive hover:text-destructive"
+                            onClick={handleImageRemove}
+                          >
+                            <Trash2 className="size-3" /> Remove
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>

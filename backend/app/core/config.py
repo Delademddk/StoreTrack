@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:8080"]
     BACKEND_PORT: int = 8000
 
+    PRODUCT_IMAGE_UPLOAD_DIR: str = "uploads/products"
+    PRODUCT_IMAGE_MAX_SIZE_MB: int = 5
+
     DATABASE_SERVER: str = "localhost"
     DATABASE_PORT: int = 1433
     DATABASE_NAME: str = "StoreTrack"

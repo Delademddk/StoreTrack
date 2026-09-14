@@ -1,5 +1,7 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.routes import auth, products, categories, sales, customers, users, dashboard, reports, settings as settings_route, import_export
 
@@ -27,6 +29,10 @@ app.include_router(dashboard.router)
 app.include_router(reports.router)
 app.include_router(settings_route.router)
 app.include_router(import_export.router)
+
+upload_dir = Path(settings.PRODUCT_IMAGE_UPLOAD_DIR)
+upload_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/api/health")

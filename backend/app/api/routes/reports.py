@@ -168,20 +168,23 @@ def export_report(format: str = "csv", user: dict = Depends(get_current_user)):
 
 @router.get("/products/export")
 def export_products(user: dict = Depends(get_current_user)):
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["SKU", "Name", "Category", "Brand", "Boxes", "Items Per Box", "Extra Pieces", "Price Per Box", "Individual Price", "Low Stock Threshold", "Description", "Barcode"])
-    for p in product_repo.get_all():
-        writer.writerow([
-            p.get("Sku", ""), p.get("Name", ""), p.get("CategoryName") or "",
-            p.get("Brand") or "", p.get("Boxes", 0), p.get("ItemsPerBox", 1),
-            p.get("ExtraPieces", 0), float(p.get("PricePerBox", 0)),
-            float(p.get("IndividualPrice", 0)), p.get("LowStockThreshold", 10),
-            p.get("Description") or "", p.get("Barcode") or "",
-        ])
-    output.seek(0)
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=products_export.csv"},
-    )
+    items = product_repo.get_all()
+    return [
+        {
+            "SKU": p.get("Sku", ""),
+            "Name": p.get("Name", ""),
+            "Category": p.get("CategoryName") or "",
+            "Brand": p.get("Brand") or "",
+            "Supplier": p.get("Supplier") or "",
+            "IsBoxed": bool(p.get("IsBoxed", False)),
+            "Boxes": p.get("Boxes", 0),
+            "ItemsPerBox": p.get("ItemsPerBox", 1),
+            "ExtraPieces": p.get("ExtraPieces", 0),
+            "PricePerBox": float(p.get("PricePerBox", 0)),
+            "IndividualPrice": float(p.get("IndividualPrice", 0)),
+            "LowStockThreshold": p.get("LowStockThreshold", 10),
+            "Description": p.get("Description") or "",
+            "Barcode": p.get("Barcode") or "",
+        }
+        for p in items
+    ]

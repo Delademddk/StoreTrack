@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { activity as defaultActivity } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 import { useAuth } from "@/lib/auth-context";
@@ -20,7 +19,7 @@ function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { data: activityData } = useFetch(() => api.getActivity(), []);
-  const activity = activityData || defaultActivity;
+  const activity = activityData || [];
 
   return (
     <>

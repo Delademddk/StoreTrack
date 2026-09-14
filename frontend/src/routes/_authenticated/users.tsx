@@ -30,7 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { permissions, users as seedUsers } from "@/lib/mock-data";
+import { permissions } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { useFetch } from "@/hooks/use-fetch";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/users")({
 function UsersPage() {
   const [q, setQ] = useState("");
   const [role, setRole] = useState("all");
-  const [users, setUsers] = useState(seedUsers);
+  const [users, setUsers] = useState<any[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ name: "", username: "", email: "", phone: "", role: "Cashier" });
